@@ -1,0 +1,33 @@
+node_modules
+.next
+out
+build
+dist
+coverage
+
+# env
+.env
+.env.local
+.env.*.local
+
+# prisma
+prisma/*.db
+prisma/*.db-journal
+
+# misc
+.DS_Store
+*.log
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# env backups & local copies (Phase staging)
+.env.dev.bak
+*.bak
+.env.staging
+
+# TS build cache
+*.tsbuildinfo
+
+# Prisma generated client (regenerated via `prisma generate`)
+# (kept out of VCS; run `npm run build` / `prisma generate` after clone)

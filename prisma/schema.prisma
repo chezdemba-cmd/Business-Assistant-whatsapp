@@ -1,0 +1,2251 @@
+// Djeli's Business Assistant — schéma de données
+// Phase 1 : fondations (auth, multi-tenant, RBAC, audit).
+// Phase 2 : catalogue, produits, stock (modèles Product* / Stock*).
+// Modules métier suivants (commandes, créances, conversations, IA) à venir.
+
+generator client {
+  provider   = "prisma-client-js"
+  // Moteur "binary" (sous-processus) plutôt que "library" (.node chargé via
+  // require) : évite les soucis de LoadLibrary sur certains environnements
+  // Windows (chemins avec espaces, antivirus, VC++ redist manquant).
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────── Enums ───────────────────────────────
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  SALES
+  EMPLOYEE
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum BusinessType {
+  WHOLESALE
+  RETAIL
+  DISTRIBUTION
+  IMPORT_EXPORT
+  OTHER
+}
+
+// ── Phase 2 : catalogue & stock ──
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+/// Unités de vente courantes du commerce. OTHER + unitLabel pour le libre.
+enum ProductUnit {
+  UNIT
+  SAC
+  CARTON
+  PAQUET
+  BIDON
+  LITRE
+  KG
+  BOITE
+  BOUTEILLE
+  LOT
+  PALETTE
+  ROULEAU
+  OTHER
+}
+
+/// `quantity` est TOUJOURS positive ; le sens (±) dépend du type.
+/// Delta physique centralisé : voir src/server/stock/movement-rules.ts
+///   +  INITIAL, PURCHASE, ADJUSTMENT_IN, RETURN_IN, CANCELLATION
+///   -  SALE, ADJUSTMENT_OUT, RETURN_OUT
+enum StockMovementType {
+  INITIAL
+  PURCHASE
+  SALE
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+  RETURN_IN
+  RETURN_OUT
+  CANCELLATION
+}
+
+enum StockReservationStatus {
+  ACTIVE
+  RELEASED
+  FULFILLED
+  EXPIRED
+}
+
+enum ReservationSourceType {
+  ORDER
+  MANUAL
+  OTHER
+}
+
+// ── Phase 3 : CRM & commandes ──
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum CustomerSource {
+  MANUAL
+  WHATSAPP
+  IMPORT
+  AI
+}
+
+enum CustomerType {
+  PARTICULIER
+  DETAILLANT
+  GROSSISTE
+  REVENDEUR
+  ENTREPRISE
+  AUTRE
+}
+
+enum CustomerActivityType {
+  CUSTOMER_CREATED
+  CUSTOMER_UPDATED
+  ORDER_CREATED
+  ORDER_CONFIRMED
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  PAYMENT_RECORDED
+  PAYMENT_CANCELLED
+  DEBT_CREATED
+  REMINDER_PREPARED
+  REMINDER_SENT
+  MESSAGE_RECEIVED
+  MESSAGE_SENT
+  AI_ORDER_DRAFT_CREATED
+  AI_HANDOFF
+}
+
+// ── Phase 4 : créances, paiements, relances ──
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  MOBILE_MONEY
+  CHEQUE
+  CARD
+  OTHER
+}
+
+enum PaymentProvider {
+  WAVE
+  ORANGE_MONEY
+  MOOV
+  OTHER
+}
+
+enum PaymentStatus {
+  CONFIRMED
+  PENDING
+  CANCELLED
+}
+
+enum ReminderCampaignStatus {
+  DRAFT
+  READY
+  SENT
+  CANCELLED
+}
+
+enum ReminderItemStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+// ── Phase 5 : WhatsApp Business & conversations ──
+
+enum WhatsAppProvider {
+  META_CLOUD
+  MOCK
+}
+
+enum WhatsAppConnectionStatus {
+  DISCONNECTED
+  PENDING
+  CONNECTED
+  ERROR
+  SUSPENDED
+}
+
+enum ConversationMode {
+  AUTO
+  HUMAN
+  PAUSED
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  DOCUMENT
+  AUDIO
+  VIDEO
+  LOCATION
+  CONTACT
+  INTERACTIVE
+  UNKNOWN
+}
+
+/// Statut unifié : `RECEIVED` pour l'inbound ; cycle
+/// `QUEUED → SENT → DELIVERED → READ` (+ `FAILED`) pour l'outbound.
+enum MessageStatus {
+  RECEIVED
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+// ── Phase 6 : Djeli IA ──
+
+enum AiAutomationType {
+  WHATSAPP_AUTO_REPLY
+  INTERNAL_ASSISTANT
+}
+
+enum AiRunStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  HANDOFF
+  SKIPPED
+}
+
+enum AiConfidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum AiToolCallStatus {
+  OK
+  ERROR
+  DENIED
+}
+
+enum OrderDraftStatus {
+  DRAFT
+  AWAITING_CUSTOMER_CONFIRMATION
+  CUSTOMER_CONFIRMED
+  AWAITING_HUMAN_APPROVAL
+  APPROVED
+  REJECTED
+  EXPIRED
+  CONVERTED
+}
+
+enum AiActionType {
+  CREATE_ORDER_FROM_DRAFT
+  PREPARE_REMINDER
+}
+
+enum AiActionProposalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  EXECUTED
+  FAILED
+}
+
+// ── Phase 6B : Djeli Voice ──
+
+enum VoiceLanguage {
+  FR
+  BM
+  MIXED
+  UNKNOWN
+}
+
+enum VoiceTranscriptionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CORRECTED
+}
+
+enum OrderStatus {
+  NEW
+  PENDING_CONFIRMATION
+  CONFIRMED
+  PREPARING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REJECTED
+}
+
+enum OrderPaymentStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  CREDIT
+}
+
+enum OrderSource {
+  MANUAL
+  WHATSAPP
+  AI
+  IMPORT
+}
+
+enum OrderEventSource {
+  MANUAL
+  WHATSAPP
+  AI
+  SYSTEM
+}
+
+// ─────────────────────────────── Modèles ───────────────────────────────
+
+/// Utilisateur global. Le téléphone n'est jamais la clé technique interne (id = cuid).
+model User {
+  id                   String     @id @default(cuid())
+  email                String     @unique
+  emailVerified        DateTime?
+  phone                String?    @unique
+  phoneVerified        DateTime?
+  firstName            String
+  lastName             String
+  /// Nullable : un compte peut être créé par invitation avant de définir un mot de passe,
+  /// ou via un futur provider téléphone/OTP.
+  passwordHash         String?
+  /// Horodatage du dernier changement de mot de passe. Toute session émise
+  /// AVANT cette date est considérée invalide (révocation « douce » sans
+  /// table de sessions — cf. dette technique).
+  passwordChangedAt    DateTime?
+  /// Révocation « globale » (Phase 8) : toute session émise AVANT cette date est
+  /// rejetée. Positionné par « déconnecter tous les appareils », par une
+  /// suspension de compte, ou par l'admin Djeli en cas d'appareil compromis.
+  sessionInvalidBefore DateTime?
+  /// Opérateur de la plateforme Djeli (console /admin). N'est PAS un rôle
+  /// d'organisation et ne donne aucun accès au contenu privé des tenants.
+  isSuperAdmin         Boolean    @default(false)
+  avatarUrl            String?
+  locale               String     @default("fr")
+  status               UserStatus @default(ACTIVE)
+  lastLoginAt          DateTime?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  memberships              OrganizationMember[]
+  organizationsOwned       Organization[]                @relation("OrganizationOwner")
+  invitationsSent          Invitation[]                  @relation("InvitationInviter")
+  invitationsAccepted      Invitation[]                  @relation("InvitationAcceptedBy")
+  auditLogs                AuditLog[]                    @relation("AuditActor")
+  stockMovements           StockMovement[]               @relation("StockMovementActor")
+  assignedCustomers        Customer[]                    @relation("CustomerAssignee")
+  createdOrders            Order[]                       @relation("OrderCreator")
+  recordedPayments         Payment[]                     @relation("PaymentRecorder")
+  cancelledPayments        Payment[]                     @relation("PaymentCanceller")
+  reminderCampaigns        ReminderCampaign[]            @relation("ReminderCampaignCreator")
+  assignedConversations    Conversation[]                @relation("ConversationAssignee")
+  sentMessages             Message[]                     @relation("MessageSender")
+  aiRuns                   AiRun[]                       @relation("AiRunUser")
+  orderDrafts              OrderDraft[]                  @relation("OrderDraftCreator")
+  approvedProposals        AiActionProposal[]            @relation("AiActionProposalApprover")
+  correctedTranscripts     VoiceTranscription[]          @relation("VoiceTranscriptionCorrector")
+  automationRulesCreated   AutomationRule[]              @relation("AutomationRuleCreator")
+  recommendationsDismissed BusinessRecommendation[]      @relation("RecommendationDismisser")
+  campaignsCreated         MarketingCampaign[]           @relation("MarketingCampaignCreator")
+  campaignsApproved        MarketingCampaign[]           @relation("MarketingCampaignApprover")
+  notifications            Notification[]                @relation("NotificationRecipient")
+  supportTicketsOpened     SupportTicket[]               @relation("SupportTicketOpener")
+  feedbackSubmitted        Feedback[]                    @relation("FeedbackAuthor")
+  deletionRequests         OrganizationDeletionRequest[] @relation("OrgDeletionRequester")
+
+  @@map("users")
+}
+
+/// Une organisation = une entreprise cliente. Cœur du multi-tenant.
+/// Les paramètres de base vivent directement ici (pas de table dédiée tant qu'inutile).
+model Organization {
+  id           String             @id @default(cuid())
+  name         String
+  slug         String             @unique
+  phone        String?
+  email        String?
+  countryCode  String             @default("ML")
+  currency     String             @default("XOF")
+  timezone     String             @default("Africa/Bamako")
+  addressLine  String?
+  city         String?
+  district     String?
+  businessType BusinessType       @default(WHOLESALE)
+  status       OrganizationStatus @default(ACTIVE)
+
+  /// Programme pilote (Phase 8) : support renforcé, logs techniques, feedback.
+  /// N'ouvre AUCUN accès au contenu privé sans autorisation explicite.
+  isPilot Boolean @default(false)
+  /// Organisation de démonstration — ne doit jamais être mélangée à la prod.
+  isDemo  Boolean @default(false)
+
+  /// OWNER principal (un seul dans le MVP). Doublé par un OrganizationMember role=OWNER.
+  ownerUserId String
+  owner       User   @relation("OrganizationOwner", fields: [ownerUserId], references: [id])
+
+  onboardedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  members             OrganizationMember[]
+  invitations         Invitation[]
+  auditLogs           AuditLog[]
+  categories          ProductCategory[]
+  products            Product[]
+  stockMovements      StockMovement[]
+  stockReservations   StockReservation[]
+  customers           Customer[]
+  customerActivities  CustomerActivity[]
+  orders              Order[]
+  orderItems          OrderItem[]
+  orderStatusHistory  OrderStatusHistory[]
+  orderCounter        OrderCounter?
+  payments            Payment[]
+  reminderCampaigns   ReminderCampaign[]
+  reminderItems       ReminderCampaignItem[]
+  whatsappConnections WhatsAppConnection[]
+  conversations       Conversation[]
+  messages            Message[]
+  aiRuns              AiRun[]
+  aiToolCalls         AiToolCall[]
+  orderDrafts         OrderDraft[]
+  aiActionProposals   AiActionProposal[]
+  voiceTranscriptions VoiceTranscription[]
+  automationRules     AutomationRule[]
+  automationRuns      AutomationRun[]
+  recommendations     BusinessRecommendation[]
+  marketingCampaigns  MarketingCampaign[]
+  marketingItems      MarketingCampaignItem[]
+  notifications       Notification[]
+  jobs                Job[]
+  subscription        Subscription?
+  usageCounters       UsageCounter[]
+  supportTickets      SupportTicket[]
+  feedback            Feedback[]
+  deletionRequest     OrganizationDeletionRequest?
+
+  @@index([ownerUserId])
+  @@map("organizations")
+}
+
+/// Appartenance d'un utilisateur à une organisation, porteuse du rôle.
+model OrganizationMember {
+  id              String           @id @default(cuid())
+  organizationId  String
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role            Role             @default(EMPLOYEE)
+  status          MembershipStatus @default(ACTIVE)
+  /// Id de l'utilisateur ayant invité (scalaire volontairement, pas de relation).
+  invitedByUserId String?
+  joinedAt        DateTime         @default(now())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([organizationId])
+  @@map("organization_members")
+}
+
+/// Invitation d'un membre. L'envoi WhatsApp arrivera plus tard ; Phase 1 = lien + token.
+model Invitation {
+  id               String           @id @default(cuid())
+  organizationId   String
+  organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email            String?
+  phone            String
+  role             Role             @default(EMPLOYEE)
+  token            String           @unique
+  status           InvitationStatus @default(PENDING)
+  expiresAt        DateTime
+  invitedByUserId  String
+  invitedBy        User             @relation("InvitationInviter", fields: [invitedByUserId], references: [id])
+  acceptedByUserId String?
+  acceptedBy       User?            @relation("InvitationAcceptedBy", fields: [acceptedByUserId], references: [id])
+  createdAt        DateTime         @default(now())
+  acceptedAt       DateTime?
+  updatedAt        DateTime         @updatedAt
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([phone])
+  @@map("invitations")
+}
+
+/// Journal d'audit minimal. organizationId nullable pour les événements hors-tenant
+/// (ex : LOGIN_SUCCESS avant sélection d'organisation).
+model AuditLog {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  actorUserId    String?
+  actor          User?         @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  action         String
+  entityType     String
+  entityId       String?
+  metadata       Json?
+  ipAddress      String?
+  createdAt      DateTime      @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([actorUserId])
+  @@map("audit_logs")
+}
+
+// ─────────────────────── Phase 2 : catalogue & stock ───────────────────────
+
+/// Catégorie de produit, propre à chaque organisation.
+model ProductCategory {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  slug           String
+  description    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  products Product[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@map("product_categories")
+}
+
+/// Produit du catalogue. Le STOCK N'EST PAS une colonne : il est dérivé des
+/// StockMovement (physique) et des StockReservation (réservé).
+///
+/// Montants : entiers, dans la plus petite unité affichée de la devise de
+/// l'organisation (XOF/XAF = franc entier). Une devise à décimales stockera
+/// en centimes plus tard via un facteur d'échelle porté par l'organisation.
+model Product {
+  id             String           @id @default(cuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sku            String
+  name           String
+  description    String?
+  categoryId     String?
+  category       ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  unit           ProductUnit      @default(UNIT)
+  /// Libellé libre quand unit = OTHER.
+  unitLabel      String?
+  purchasePrice  Int?
+  salePrice      Int              @default(0)
+  photoUrl       String?
+  alertThreshold Int              @default(0)
+  supplierName   String?
+  barcode        String?
+  status         ProductStatus    @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  archivedAt     DateTime?
+
+  movements    StockMovement[]
+  reservations StockReservation[]
+  orderItems   OrderItem[]
+
+  @@unique([organizationId, sku])
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, categoryId])
+  @@index([organizationId, barcode])
+  @@map("products")
+}
+
+/// Événement de stock — IMMUABLE une fois créé. Une erreur se corrige par un
+/// mouvement compensatoire, jamais par édition ou suppression.
+model StockMovement {
+  id             String            @id @default(cuid())
+  organizationId String
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type           StockMovementType
+  /// Toujours strictement positive. Le signe physique vient de `type`.
+  quantity       Int
+  reason         String?
+  reference      String?
+  actorUserId    String?
+  actor          User?             @relation("StockMovementActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  metadata       Json?
+  createdAt      DateTime          @default(now())
+
+  @@index([organizationId])
+  @@index([productId])
+  @@index([organizationId, createdAt])
+  @@index([productId, createdAt])
+  @@index([organizationId, type])
+  @@map("stock_movements")
+}
+
+/// Réservation de stock. Le moteur est prêt pour la Phase 3 (commandes) ;
+/// aucune création manuelle via l'UI en Phase 2.
+model StockReservation {
+  id             String                 @id @default(cuid())
+  organizationId String
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity       Int
+  status         StockReservationStatus @default(ACTIVE)
+  sourceType     ReservationSourceType  @default(MANUAL)
+  sourceId       String?
+  expiresAt      DateTime?
+  createdAt      DateTime               @default(now())
+  releasedAt     DateTime?
+  fulfilledAt    DateTime?
+
+  @@index([organizationId])
+  @@index([productId])
+  @@index([status])
+  @@index([productId, status])
+  @@map("stock_reservations")
+}
+
+// ─────────────────────── Phase 3 : CRM & commandes ───────────────────────
+
+/// Client d'une organisation. Téléphone normalisé E.164, unique PAR
+/// organisation (plusieurs clients sans téléphone autorisés).
+model Customer {
+  id                String         @id @default(cuid())
+  organizationId    String
+  organization      Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  firstName         String?
+  lastName          String?
+  /// Nom affiché (dérivé de prénom/nom ou de la boutique, jamais vide).
+  displayName       String
+  phone             String?
+  email             String?
+  customerType      CustomerType?
+  businessName      String?
+  address           String?
+  city              String?
+  area              String?
+  countryCode       String?
+  notes             String?
+  status            CustomerStatus @default(ACTIVE)
+  source            CustomerSource @default(MANUAL)
+  /// Consentement marketing (Phase 7 §28-29). Les communications
+  /// TRANSACTIONNELLES (relances de créance, confirmations) ne dépendent pas de
+  /// ce champ ; seules les CAMPAGNES marketing l'exigent. `true` par défaut pour
+  /// les clients existants du commerçant ; un opt-out explicite fait foi.
+  marketingOptIn    Boolean        @default(true)
+  marketingOptInAt  DateTime?
+  marketingOptOutAt DateTime?
+  /// Commercial assigné — sert au périmètre de visibilité RBAC (SALES).
+  assignedToUserId  String?
+  assignedTo        User?          @relation("CustomerAssignee", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  archivedAt        DateTime?
+
+  orders        Order[]
+  activities    CustomerActivity[]
+  payments      Payment[]
+  reminderItems ReminderCampaignItem[]
+  conversations Conversation[]
+  messages      Message[]
+  orderDrafts   OrderDraft[]
+  campaignItems MarketingCampaignItem[]
+
+  @@unique([organizationId, phone])
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, assignedToUserId])
+  @@map("customers")
+}
+
+/// Historique léger côté client.
+model CustomerActivity {
+  id             String               @id @default(cuid())
+  organizationId String
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customerId     String
+  customer       Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type           CustomerActivityType
+  title          String
+  metadata       Json?
+  actorUserId    String?
+  createdAt      DateTime             @default(now())
+
+  @@index([organizationId])
+  @@index([customerId, createdAt])
+  @@map("customer_activities")
+}
+
+/// Compteur séquentiel de référence de commande, par organisation.
+/// Incrément atomique dans la transaction de création de commande.
+model OrderCounter {
+  organizationId String       @id
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  lastNumber     Int          @default(0)
+  updatedAt      DateTime     @updatedAt
+
+  @@map("order_counters")
+}
+
+model Order {
+  id                  String             @id @default(cuid())
+  organizationId      String
+  organization        Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customerId          String
+  customer            Customer           @relation(fields: [customerId], references: [id])
+  orderNumber         Int
+  reference           String
+  status              OrderStatus        @default(NEW)
+  paymentStatus       OrderPaymentStatus @default(UNPAID)
+  source              OrderSource        @default(MANUAL)
+  subtotal            Int                @default(0)
+  discountAmount      Int                @default(0)
+  deliveryFee         Int                @default(0)
+  totalAmount         Int                @default(0)
+  /// Cache métier = somme des paiements CONFIRMED. Recalculé dans CHAQUE
+  /// transaction de paiement/annulation. La vérité reste les lignes Payment.
+  amountPaid          Int                @default(0)
+  currency            String
+  /// Échéance de règlement (ventes à crédit). null = pas d'échéance → jamais
+  /// « en retard » automatiquement.
+  dueDate             DateTime?
+  notes               String?
+  deliveryAddress     String?
+  deliveryArea        String?
+  requestedDeliveryAt DateTime?
+  createdByUserId     String?
+  createdBy           User?              @relation("OrderCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  confirmedByUserId   String?
+  confirmedAt         DateTime?
+  deliveredAt         DateTime?
+  cancelledAt         DateTime?
+  cancellationReason  String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  items         OrderItem[]
+  statusHistory OrderStatusHistory[]
+  payments      Payment[]
+  reminderItems ReminderCampaignItem[]
+  orderDrafts   OrderDraft[]           @relation("OrderDraftConverted")
+
+  @@unique([organizationId, orderNumber])
+  @@unique([organizationId, reference])
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, paymentStatus])
+  @@index([organizationId, createdAt])
+  @@index([organizationId, dueDate])
+  @@index([customerId])
+  @@index([createdByUserId])
+  @@map("orders")
+}
+
+/// Ligne de commande — SNAPSHOTS de nom/SKU/prix : la commande historique
+/// ne change jamais si le produit évolue ensuite.
+model OrderItem {
+  id                  String       @id @default(cuid())
+  organizationId      String
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  orderId             String
+  order               Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId           String
+  product             Product      @relation(fields: [productId], references: [id])
+  productNameSnapshot String
+  skuSnapshot         String
+  quantity            Int
+  unitPrice           Int
+  subtotal            Int
+  createdAt           DateTime     @default(now())
+
+  @@index([orderId])
+  @@index([organizationId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id             String           @id @default(cuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  orderId        String
+  order          Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus     OrderStatus?
+  toStatus       OrderStatus
+  actorUserId    String?
+  source         OrderEventSource @default(MANUAL)
+  metadata       Json?
+  createdAt      DateTime         @default(now())
+
+  @@index([orderId, createdAt])
+  @@index([organizationId])
+  @@map("order_status_history")
+}
+
+// ─────────────────── Phase 4 : créances, paiements, relances ───────────────────
+
+/// Paiement encaissé — brique élémentaire de la créance. La créance elle-même
+/// n'est JAMAIS un champ : balanceDue = totalAmount − Σ(paiements CONFIRMED).
+/// Un paiement ne se supprime pas : il passe en CANCELLED (traçabilité).
+///
+/// Montants : entiers, plus petite unité de la devise de l'organisation
+/// (mêmes règles que Product / Order).
+model Payment {
+  id                 String           @id @default(cuid())
+  organizationId     String
+  organization       Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customerId         String
+  customer           Customer         @relation(fields: [customerId], references: [id])
+  /// Nullable : le MVP privilégie le paiement rattaché à une commande, mais un
+  /// encaissement libre reste possible (pas d'imputation automatique complexe).
+  orderId            String?
+  order              Order?           @relation(fields: [orderId], references: [id])
+  amount             Int
+  currency           String
+  method             PaymentMethod    @default(CASH)
+  /// Fournisseur mobile money — déclaratif uniquement, aucun branchement API.
+  provider           PaymentProvider?
+  status             PaymentStatus    @default(CONFIRMED)
+  reference          String?
+  paidAt             DateTime         @default(now())
+  recordedByUserId   String?
+  recordedBy         User?            @relation("PaymentRecorder", fields: [recordedByUserId], references: [id], onDelete: SetNull)
+  notes              String?
+  metadata           Json?
+  cancelledAt        DateTime?
+  cancelledByUserId  String?
+  cancelledBy        User?            @relation("PaymentCanceller", fields: [cancelledByUserId], references: [id], onDelete: SetNull)
+  cancellationReason String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, paidAt])
+  @@index([customerId])
+  @@index([orderId])
+  @@map("payments")
+}
+
+/// Campagne de relance préparée. ENVOI SIMULÉ : aucune intégration WhatsApp
+/// réelle en Phase 4. Le passage à SENT marque les items comme envoyés en
+/// mode simulation, jamais un message réellement transmis.
+model ReminderCampaign {
+  id              String                 @id @default(cuid())
+  organizationId  String
+  organization    Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name            String?
+  status          ReminderCampaignStatus @default(DRAFT)
+  createdByUserId String?
+  createdBy       User?                  @relation("ReminderCampaignCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt       DateTime               @default(now())
+  sentAt          DateTime?
+  updatedAt       DateTime               @updatedAt
+
+  items ReminderCampaignItem[]
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@map("reminder_campaigns")
+}
+
+/// Ligne de campagne — SNAPSHOT du montant dû et du message au moment de la
+/// préparation. La créance sous-jacente peut évoluer après coup.
+model ReminderCampaignItem {
+  id             String             @id @default(cuid())
+  organizationId String
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  campaignId     String
+  campaign       ReminderCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customerId     String
+  customer       Customer           @relation(fields: [customerId], references: [id])
+  orderId        String?
+  order          Order?             @relation(fields: [orderId], references: [id])
+  amountDue      Int
+  message        String
+  status         ReminderItemStatus @default(PENDING)
+  createdAt      DateTime           @default(now())
+  sentAt         DateTime?
+
+  @@index([organizationId])
+  @@index([campaignId])
+  @@index([customerId])
+  @@index([orderId])
+  @@map("reminder_campaign_items")
+}
+
+// ─────────────────── Phase 5 : WhatsApp Business & conversations ───────────────────
+
+/// Numéro WhatsApp Business connecté par une organisation (Cloud API).
+/// Le tenant d'un webhook entrant est déterminé par `phoneNumberId` — JAMAIS
+/// par le numéro du client. Un seul numéro actif par organisation dans le MVP.
+model WhatsAppConnection {
+  id                   String                   @id @default(cuid())
+  organizationId       String
+  organization         Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider             WhatsAppProvider         @default(META_CLOUD)
+  /// Identifiant du numéro chez Meta (Phone Number ID). Unique globalement :
+  /// un même numéro ne peut pas être branché sur deux organisations.
+  phoneNumberId        String                   @unique
+  businessAccountId    String?
+  displayPhoneNumber   String?
+  verifiedName         String?
+  /// Access token Meta CHIFFRÉ (AES-256-GCM). Jamais exposé au client, aux
+  /// logs, à l'audit ni aux erreurs.
+  accessTokenEncrypted String?
+  /// Secret propre à la connexion si un jour un webhook par numéro est utilisé.
+  webhookSecret        String?
+  status               WhatsAppConnectionStatus @default(DISCONNECTED)
+  lastError            String?
+  connectedAt          DateTime?
+  disconnectedAt       DateTime?
+  lastEventAt          DateTime?
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+
+  conversations Conversation[]
+  messages      Message[]
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@map("whatsapp_connections")
+}
+
+/// Fil de discussion WhatsApp avec un contact (un `externalWaId` par connexion).
+model Conversation {
+  id                   String             @id @default(cuid())
+  organizationId       String
+  organization         Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  whatsappConnectionId String
+  whatsappConnection   WhatsAppConnection @relation(fields: [whatsappConnectionId], references: [id], onDelete: Cascade)
+  customerId           String?
+  customer             Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  /// wa_id du contact (numéro sans « + », format Meta).
+  externalWaId         String
+  mode                 ConversationMode   @default(HUMAN)
+  status               ConversationStatus @default(OPEN)
+  assignedToUserId     String?
+  assignedTo           User?              @relation("ConversationAssignee", fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  lastMessageAt        DateTime           @default(now())
+  lastInboundAt        DateTime?
+  lastOutboundAt       DateTime?
+  unreadCount          Int                @default(0)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  messages            Message[]
+  aiRuns              AiRun[]
+  orderDrafts         OrderDraft[]
+  aiProposals         AiActionProposal[]
+  voiceTranscriptions VoiceTranscription[]
+
+  @@unique([whatsappConnectionId, externalWaId])
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, assignedToUserId])
+  @@index([organizationId, lastMessageAt])
+  @@index([customerId])
+  @@map("conversations")
+}
+
+/// Message individuel. `externalMessageId` porte l'idempotence des webhooks
+/// Meta redélivrés (un seul Message par id externe et par organisation).
+model Message {
+  id                   String             @id @default(cuid())
+  organizationId       String
+  organization         Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversationId       String
+  conversation         Conversation       @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  whatsappConnectionId String
+  whatsappConnection   WhatsAppConnection @relation(fields: [whatsappConnectionId], references: [id], onDelete: Cascade)
+  customerId           String?
+  customer             Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  externalMessageId    String?
+  direction            MessageDirection
+  type                 MessageType        @default(TEXT)
+  status               MessageStatus
+  body                 String?
+  /// Médias : on stocke l'id Meta + le type ; téléchargement différé (Phase 6+).
+  mediaId              String?
+  mediaUrl             String?
+  mediaMimeType        String?
+  mediaCaption         String?
+  replyToMessageId     String?
+  sentByUserId         String?
+  sentBy               User?              @relation("MessageSender", fields: [sentByUserId], references: [id], onDelete: SetNull)
+  /// Message rédigé par Djeli IA (réponse automatique). `sentByUserId` reste nul.
+  generatedByAi        Boolean            @default(false)
+  aiRunId              String?
+  aiRun                AiRun?             @relation(fields: [aiRunId], references: [id], onDelete: SetNull)
+  errorCode            String?
+  errorMessage         String?
+  providerTimestamp    DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  voiceTranscription VoiceTranscription?
+
+  @@unique([organizationId, externalMessageId])
+  @@index([conversationId, createdAt])
+  @@index([organizationId])
+  @@index([externalMessageId])
+  @@map("messages")
+}
+
+// ─────────────────────────── Phase 6 : Djeli IA ───────────────────────────
+
+/// Une exécution de Djeli IA : réponse automatique WhatsApp OU requête dans
+/// l'assistant interne `/ai`. Sert la traçabilité (message déclencheur, intent,
+/// tools, handoff, tokens) — JAMAIS le raisonnement interne du modèle.
+model AiRun {
+  id             String           @id @default(cuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation   Conversation?    @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  /// Message INBOUND déclencheur (automation WhatsApp). Nul pour l'assistant interne.
+  messageId      String?
+  /// Utilisateur à l'origine (assistant interne). Nul quand l'IA agit au nom
+  /// de l'organisation (principal SYSTEM_AI).
+  userId         String?
+  user           User?            @relation("AiRunUser", fields: [userId], references: [id], onDelete: SetNull)
+  automationType AiAutomationType
+  intent         String?
+  language       String?
+  provider       String
+  model          String
+  promptVersion  String
+  status         AiRunStatus      @default(PENDING)
+  confidence     AiConfidence?
+  handoffReason  String?
+  inputTokens    Int?
+  outputTokens   Int?
+  latencyMs      Int?
+  errorCode      String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  toolCalls AiToolCall[]
+  messages  Message[]
+  proposals AiActionProposal[]
+
+  @@unique([messageId, automationType])
+  @@index([organizationId, createdAt])
+  @@index([conversationId])
+  @@map("ai_runs")
+}
+
+/// Trace sanitisée d'un appel de capability par l'IA. Résumés courts, jamais
+/// le contenu complet de la base.
+model AiToolCall {
+  id             String           @id @default(cuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  aiRunId        String
+  aiRun          AiRun            @relation(fields: [aiRunId], references: [id], onDelete: Cascade)
+  toolName       String
+  status         AiToolCallStatus
+  inputSummary   String?
+  outputSummary  String?
+  durationMs     Int?
+  createdAt      DateTime         @default(now())
+
+  @@index([aiRunId])
+  @@index([organizationId, createdAt])
+  @@map("ai_tool_calls")
+}
+
+/// Brouillon de commande préparé par l'IA (ou un humain via l'assistant).
+/// N'est JAMAIS la source de vérité : la conversion passe par `createOrder`.
+/// Aucune réservation de stock tant que le draft n'est pas converti.
+model OrderDraft {
+  id               String           @id @default(cuid())
+  organizationId   String
+  organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversationId   String?
+  conversation     Conversation?    @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  customerId       String?
+  customer         Customer?        @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  createdByUserId  String?
+  createdBy        User?            @relation("OrderDraftCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  /// Message client déclencheur — porte l'idempotence (pas de double draft).
+  sourceMessageId  String?
+  status           OrderDraftStatus @default(DRAFT)
+  currency         String
+  subtotal         Int              @default(0)
+  totalAmount      Int              @default(0)
+  deliveryAddress  String?
+  notes            String?
+  rejectionReason  String?
+  convertedOrderId String?
+  convertedOrder   Order?           @relation("OrderDraftConverted", fields: [convertedOrderId], references: [id], onDelete: SetNull)
+  expiresAt        DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  items OrderDraftItem[]
+
+  @@unique([conversationId, sourceMessageId])
+  @@index([organizationId, status])
+  @@index([conversationId])
+  @@index([customerId])
+  @@map("order_drafts")
+}
+
+/// Ligne de brouillon — snapshot prix/nom au moment de la préparation.
+model OrderDraftItem {
+  id                  String     @id @default(cuid())
+  organizationId      String
+  orderDraftId        String
+  orderDraft          OrderDraft @relation(fields: [orderDraftId], references: [id], onDelete: Cascade)
+  productId           String
+  productNameSnapshot String
+  skuSnapshot         String
+  quantity            Int
+  unitPrice           Int
+  subtotal            Int
+  createdAt           DateTime   @default(now())
+
+  @@index([orderDraftId])
+  @@map("order_draft_items")
+}
+
+/// Proposition d'action WRITE émise par l'IA (assistant interne surtout).
+/// Toujours confirmée par un humain avant exécution (READ→REASON→PROPOSE→
+/// CONFIRM→EXECUTE). Jamais de paiement ni d'ajustement de stock.
+model AiActionProposal {
+  id               String                 @id @default(cuid())
+  organizationId   String
+  organization     Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  aiRunId          String?
+  aiRun            AiRun?                 @relation(fields: [aiRunId], references: [id], onDelete: SetNull)
+  conversationId   String?
+  conversation     Conversation?          @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  type             AiActionType
+  /// Paramètres de l'action (ids, quantités…) — validés à l'exécution.
+  payload          Json
+  summary          String
+  status           AiActionProposalStatus @default(PENDING)
+  createdByUserId  String?
+  approvedByUserId String?
+  approvedBy       User?                  @relation("AiActionProposalApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  approvedAt       DateTime?
+  executedAt       DateTime?
+  resultSummary    String?
+  expiresAt        DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  @@index([organizationId, status])
+  @@index([conversationId])
+  @@map("ai_action_proposals")
+}
+
+// ─────────────────────────── Phase 6B : Djeli Voice ───────────────────────────
+
+/// Transcription d'un message vocal (WhatsApp AUDIO). DONNÉE OPÉRATIONNELLE du
+/// Business Assistant — PAS un dictionnaire linguistique. `originalText` n'est
+/// jamais écrasé ; `effectiveText` = correctedText ?? originalText (maintenu).
+///
+/// Politique audio (MVP) : le binaire N'EST PAS conservé — téléchargé, transcrit,
+/// puis jeté. Aucune URL d'audio n'est stockée ici.
+///
+/// Les corrections humaines pourront plus tard être exportées vers le futur
+/// « Djeli Language Core » (avec politique de consentement / anonymisation /
+/// rétention / séparation tenant ↔ global) — RIEN n'est copié automatiquement.
+model VoiceTranscription {
+  id                String                   @id @default(cuid())
+  organizationId    String
+  organization      Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// Un message audio n'a qu'UNE transcription active logique.
+  messageId         String                   @unique
+  message           Message                  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  conversationId    String?
+  conversation      Conversation?            @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  provider          String
+  model             String
+  originalText      String                   @default("")
+  correctedText     String?
+  /// = correctedText si présent, sinon originalText. C'est ce texte qui part
+  /// vers Djeli IA.
+  effectiveText     String                   @default("")
+  /// Texte pour traitement machine (normalisation douce) — l'original reste roi.
+  normalizedText    String?
+  detectedLanguage  VoiceLanguage            @default(UNKNOWN)
+  /// Langue suggérée par le moteur (avant arbitrage applicatif).
+  providerLanguage  String?
+  confidence        Float?
+  durationMs        Int?
+  audioSeconds      Int?
+  providerCost      Float?
+  status            VoiceTranscriptionStatus @default(PENDING)
+  errorCode         String?
+  correctedByUserId String?
+  correctedBy       User?                    @relation("VoiceTranscriptionCorrector", fields: [correctedByUserId], references: [id], onDelete: SetNull)
+  correctedAt       DateTime?
+  attempts          Int                      @default(0)
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, status])
+  @@index([conversationId])
+  @@map("voice_transcriptions")
+}
+
+// Phase 6C : DJELI LANGUAGE CORE
+//
+// FRONTIERE D'INDEPENDANCE. Ces modeles forment un service linguistique
+// reutilisable (Business Assistant, Sante, Agriculture...). Ils NE referencent
+// AUCUNE table metier : organizationId / createdByRef / applicationCode sont
+// des chaines libres, jamais des relations Prisma. On distingue toujours
+// OBSERVATION != SUGGESTION != CONNAISSANCE VALIDEE.
+
+enum LanguageCode {
+  BM
+  FR
+  MIXED
+  OTHER
+}
+
+enum LanguageScope {
+  GLOBAL
+  DOMAIN
+  ORGANIZATION
+}
+
+enum LanguageEntryStatus {
+  OBSERVED
+  SUGGESTED
+  VALIDATED
+  REJECTED
+  ARCHIVED
+}
+
+enum LanguageSource {
+  HUMAN
+  BUSINESS_CORRECTION
+  VOICE_CORRECTION
+  IMPORT
+  RESEARCH
+  SYSTEM
+  OTHER
+}
+
+enum LanguageVariantType {
+  SPELLING
+  PRONUNCIATION
+  COLLOQUIAL
+  CODE_SWITCH
+  ABBREVIATION
+  SYNONYM
+  OTHER
+}
+
+enum LanguageConsentStatus {
+  UNKNOWN
+  NOT_REQUIRED
+  GRANTED
+  REVOKED
+  RESTRICTED
+}
+
+enum LanguageDomainStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum LanguageApplicationStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum LanguageObservationStatus {
+  NEW
+  LINKED
+  DISMISSED
+}
+
+/// Domaine metier d'une connaissance (commerce, health, agriculture...).
+model LanguageDomain {
+  id          String               @id @default(cuid())
+  code        String               @unique
+  name        String
+  description String?
+  status      LanguageDomainStatus @default(ACTIVE)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@map("language_domains")
+}
+
+/// Connaissance linguistique. Seules les entrees VALIDATED servent de
+/// reference par defaut. GLOBAL = valide + reutilisable partout ;
+/// ORGANIZATION = strictement prive (jamais promu automatiquement).
+model LanguageEntry {
+  id                 String              @id @default(cuid())
+  canonicalText      String
+  normalizedText     String
+  language           LanguageCode
+  meaning            String?
+  frenchTranslation  String?
+  englishTranslation String?
+  scope              LanguageScope       @default(ORGANIZATION)
+  domainCode         String?
+  organizationId     String?
+  status             LanguageEntryStatus @default(OBSERVED)
+  confidence         Float?
+  source             LanguageSource      @default(HUMAN)
+  provenance         Json?
+  createdByRef       String?
+  validatedByRef     String?
+  validatedAt        DateTime?
+  version            Int                 @default(1)
+  archivedAt         DateTime?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  variants       LanguageVariant[]
+  translations   LanguageTranslation[]
+  intentMappings LanguageIntentMapping[]
+  examples       LanguageExample[]
+  pronunciations PronunciationExample[]
+  revisions      LanguageEntryRevision[]
+
+  @@unique([normalizedText, language, scope, domainCode, organizationId])
+  @@index([language, status])
+  @@index([scope, status])
+  @@index([domainCode, status])
+  @@index([organizationId, status])
+  @@index([normalizedText])
+  @@map("language_entries")
+}
+
+model LanguageVariant {
+  id              String              @id @default(cuid())
+  languageEntryId String
+  entry           LanguageEntry       @relation(fields: [languageEntryId], references: [id], onDelete: Cascade)
+  text            String
+  normalizedText  String
+  variantType     LanguageVariantType @default(SPELLING)
+  region          String?
+  notes           String?
+  confidence      Float?
+  status          LanguageEntryStatus @default(SUGGESTED)
+  createdAt       DateTime            @default(now())
+
+  @@index([languageEntryId])
+  @@index([normalizedText])
+  @@map("language_variants")
+}
+
+model LanguageTranslation {
+  id              String              @id @default(cuid())
+  languageEntryId String
+  entry           LanguageEntry       @relation(fields: [languageEntryId], references: [id], onDelete: Cascade)
+  language        LanguageCode
+  text            String
+  status          LanguageEntryStatus @default(SUGGESTED)
+  source          LanguageSource      @default(HUMAN)
+  createdAt       DateTime            @default(now())
+
+  @@index([languageEntryId])
+  @@map("language_translations")
+}
+
+model LanguageIntentMapping {
+  id              String              @id @default(cuid())
+  languageEntryId String
+  entry           LanguageEntry       @relation(fields: [languageEntryId], references: [id], onDelete: Cascade)
+  intentCode      String
+  domainCode      String?
+  confidence      Float?
+  status          LanguageEntryStatus @default(SUGGESTED)
+  createdAt       DateTime            @default(now())
+
+  @@index([languageEntryId])
+  @@index([intentCode, status])
+  @@map("language_intent_mappings")
+}
+
+model LanguageExample {
+  id              String              @id @default(cuid())
+  languageEntryId String
+  entry           LanguageEntry       @relation(fields: [languageEntryId], references: [id], onDelete: Cascade)
+  exampleText     String
+  language        LanguageCode
+  domainCode      String?
+  intentCode      String?
+  source          LanguageSource      @default(HUMAN)
+  status          LanguageEntryStatus @default(SUGGESTED)
+  createdAt       DateTime            @default(now())
+
+  @@index([languageEntryId])
+  @@map("language_examples")
+}
+
+/// Exemple de prononciation. Les audios du Business Assistant ne sont PAS
+/// copies ici automatiquement (consentement requis).
+model PronunciationExample {
+  id              String                @id @default(cuid())
+  languageEntryId String
+  entry           LanguageEntry         @relation(fields: [languageEntryId], references: [id], onDelete: Cascade)
+  audioStorageKey String?
+  transcript      String
+  region          String?
+  speakerMetadata Json?
+  consentStatus   LanguageConsentStatus @default(UNKNOWN)
+  qualityScore    Float?
+  source          LanguageSource        @default(HUMAN)
+  createdAt       DateTime              @default(now())
+
+  @@index([languageEntryId])
+  @@map("language_pronunciation_examples")
+}
+
+/// Historique d'une entree — toute modification d'une entree VALIDATED est tracee.
+model LanguageEntryRevision {
+  id              String        @id @default(cuid())
+  languageEntryId String
+  entry           LanguageEntry @relation(fields: [languageEntryId], references: [id], onDelete: Cascade)
+  version         Int
+  snapshot        Json
+  changedByRef    String?
+  changeReason    String?
+  createdAt       DateTime      @default(now())
+
+  @@unique([languageEntryId, version])
+  @@index([languageEntryId])
+  @@map("language_entry_revisions")
+}
+
+/// Occurrence reelle soumise par une application. Matiere premiere brute —
+/// PAS une connaissance. Eviter toute PII inutile.
+model LanguageObservation {
+  id                String                    @id @default(cuid())
+  applicationCode   String
+  organizationId    String?
+  domainCode        String?
+  originalText      String
+  normalizedText    String
+  detectedLanguage  LanguageCode              @default(OTHER)
+  contextType       String?
+  sourceReference   String?
+  /// Anti-doublon sur retries : (applicationCode + organization + sourceReference).
+  idempotencyKey    String?                   @unique
+  /// Résultat du resolve au moment de l'observation (« NONE » = non reconnu).
+  resolvedMatchType String?
+  /// Rétention des données privées (purge éventuelle, Phase 6D §43).
+  retentionUntil    DateTime?
+  status            LanguageObservationStatus @default(NEW)
+  createdAt         DateTime                  @default(now())
+
+  corrections LanguageCorrection[]
+
+  @@index([applicationCode, createdAt])
+  @@index([domainCode, status])
+  @@index([normalizedText])
+  @@map("language_observations")
+}
+
+/// Correction humaine d'une observation. Matiere premiere du futur Learning
+/// Loop (Phase 6D). NE cree JAMAIS d'entree GLOBAL VALIDATED automatiquement.
+model LanguageCorrection {
+  id               String                @id @default(cuid())
+  observationId    String
+  observation      LanguageObservation   @relation(fields: [observationId], references: [id], onDelete: Cascade)
+  originalText     String
+  correctedText    String
+  correctedByRef   String?
+  detectedLanguage LanguageCode          @default(OTHER)
+  context          String?
+  consentStatus    LanguageConsentStatus @default(UNKNOWN)
+  sanitizedText    String?
+  createdAt        DateTime              @default(now())
+
+  @@index([observationId])
+  @@map("language_corrections")
+}
+
+/// Application autorisee a consommer la Language API.
+model LanguageApplication {
+  id             String                    @id @default(cuid())
+  code           String                    @unique
+  name           String
+  status         LanguageApplicationStatus @default(ACTIVE)
+  allowedDomains String[]                  @default([])
+  allowedScopes  String[]                  @default([])
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  clients LanguageApplicationClient[]
+
+  @@map("language_applications")
+}
+
+/// Identifiant client d'une application (clientId + secret hache).
+model LanguageApplicationClient {
+  id            String                    @id @default(cuid())
+  applicationId String
+  application   LanguageApplication       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  name          String
+  clientId      String                    @unique
+  secretHash    String
+  status        LanguageApplicationStatus @default(ACTIVE)
+  permissions   String[]                  @default([])
+  lastUsedAt    DateTime?
+  createdAt     DateTime                  @default(now())
+
+  @@index([applicationId])
+  @@map("language_application_clients")
+}
+
+/// Tracabilite d'un dataset importe (licence connue avant tout melange).
+model LanguageDatasetSource {
+  id                String   @id @default(cuid())
+  name              String
+  license           String
+  url               String?
+  attribution       String?
+  usageRestrictions String?
+  importedAt        DateTime @default(now())
+
+  @@map("language_dataset_sources")
+}
+
+/// Audit propre au Language Core (separe de l'audit metier).
+model LanguageAuditLog {
+  id              String   @id @default(cuid())
+  action          String
+  entityType      String
+  entityId        String?
+  applicationCode String?
+  actorRef        String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+  @@map("language_audit_logs")
+}
+
+/// Agregat simple d'usage de /resolve (metriques, pas d'analytics avance).
+model LanguageResolveMetric {
+  id              String       @id @default(cuid())
+  day             String
+  applicationCode String       @default("-")
+  domainCode      String       @default("-")
+  language        LanguageCode @default(OTHER)
+  resolveCount    Int          @default(0)
+  matchCount      Int          @default(0)
+  noMatchCount    Int          @default(0)
+  totalLatencyMs  Int          @default(0)
+  updatedAt       DateTime     @updatedAt
+
+  @@unique([day, applicationCode, domainCode, language])
+  @@map("language_resolve_metrics")
+}
+
+// Phase 6D : DJELI LEARNING LOOP
+//
+// INVARIANT : AUCUNE DONNEE NE DEVIENT GLOBAL VALIDATED AUTOMATIQUEMENT.
+// Pipeline : OBSERVATION -> CORRECTION -> CLUSTER/PATTERN -> LEARNING CANDIDATE
+//            -> HUMAN REVIEW -> SUGGESTED KNOWLEDGE -> VALIDATED KNOWLEDGE
+// L'agregation est deterministe (regles), pas de ML / embeddings / vector DB.
+
+enum LearningCandidateType {
+  NEW_ENTRY
+  VARIANT
+  TRANSLATION
+  INTENT_MAPPING
+  NORMALIZATION_PATTERN
+  PRONUNCIATION_VARIANT
+  OTHER
+}
+
+enum LearningCandidateStatus {
+  NEW
+  REVIEW_PENDING
+  APPROVED
+  REJECTED
+  PROMOTED
+  IGNORED
+  ARCHIVED
+  CONFLICT
+}
+
+enum LearningReviewAction {
+  APPROVE
+  REJECT
+  IGNORE
+  EDIT
+  PROMOTE
+  MARK_USEFUL
+  MARK_WRONG
+  RECOMPUTE_TOUCH
+}
+
+/// Candidat linguistique derive de l'agregation d'observations / corrections.
+/// Ne devient une connaissance qu'apres revue humaine (SUGGESTED), puis
+/// validation separee (VALIDATED). Deduplique par `dedupeKey`.
+model LearningCandidate {
+  id                      String                  @id @default(cuid())
+  dedupeKey               String                  @unique
+  language                LanguageCode
+  domainCode              String?
+  scopeSuggestion         LanguageScope           @default(ORGANIZATION)
+  organizationId          String?
+  candidateType           LearningCandidateType
+  canonicalText           String
+  normalizedText          String
+  originalPattern         String?
+  proposedMeaning         String?
+  proposedTranslation     String?
+  proposedTranslationLang LanguageCode?
+  proposedIntentCode      String?
+  occurrenceCount         Int                     @default(0)
+  organizationCount       Int                     @default(0)
+  correctionCount         Int                     @default(0)
+  sourceCount             Int                     @default(0)
+  confidenceScore         Float                   @default(0)
+  qualityScore            Float?
+  /// true seulement si TOUTES les preuves sont anonymisables (sanitizedText != null)
+  /// et le consentement compatible. Sinon le candidat reste ORGANIZATION.
+  shareable               Boolean                 @default(false)
+  stale                   Boolean                 @default(false)
+  status                  LearningCandidateStatus @default(NEW)
+  /// Explication lisible du score + stats affichees au reviewer (pas de PII).
+  evidenceSummary         Json
+  conflictEntryId         String?
+  promotedEntryId         String?
+  datasetSplit            String?
+  firstSeenAt             DateTime
+  lastSeenAt              DateTime
+  reviewedByRef           String?
+  reviewedAt              DateTime?
+  rejectionReason         String?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  evidence LearningEvidence[]
+  reviews  LearningReview[]
+
+  @@index([status, language])
+  @@index([scopeSuggestion, status])
+  @@index([domainCode, status])
+  @@index([organizationId, status])
+  @@map("learning_candidates")
+}
+
+/// Preuve anonymisee reliant un candidat a une observation / correction.
+/// Le reviewer global ne voit jamais de PII : `organizationHash` est un hash,
+/// pas l'organizationId.
+model LearningEvidence {
+  id               String            @id @default(cuid())
+  candidateId      String
+  candidate        LearningCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  observationId    String?
+  correctionId     String?
+  applicationCode  String?
+  domainCode       String?
+  organizationHash String?
+  detectedLanguage LanguageCode      @default(OTHER)
+  weight           Float             @default(1)
+  seenAt           DateTime
+  createdAt        DateTime          @default(now())
+
+  @@index([candidateId])
+  @@index([observationId])
+  @@index([correctionId])
+  @@map("learning_evidence")
+}
+
+/// Historique des decisions humaines sur un candidat (dual-control possible :
+/// reviewedByRef peut differer du validateur final de la LanguageEntry).
+model LearningReview {
+  id          String               @id @default(cuid())
+  candidateId String
+  candidate   LearningCandidate    @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  action      LearningReviewAction
+  actorRef    String
+  note        String?
+  metadata    Json?
+  createdAt   DateTime             @default(now())
+
+  @@index([candidateId, createdAt])
+  @@map("learning_reviews")
+}
+
+// Phase 7 : AUTOMATIONS + MARKETING + ASSISTANT PROACTIF
+//
+// PRINCIPE : DETECT -> RECOMMEND -> PREPARE -> CONFIRM -> EXECUTE.
+// Jamais DETECT -> EXECUTE AUTOMATIQUEMENT pour une action sensible ou externe.
+// Aucune campagne envoyee sans preview d'audience + validation humaine (§24).
+// Fenetre 24 h / templates Meta strictement respectes (§25, §52).
+
+enum AutomationRuleType {
+  LOW_STOCK
+  OUT_OF_STOCK
+  OVERDUE_DEBT
+  INACTIVE_CUSTOMER
+  ORDER_PENDING_CONFIRMATION
+  ORDER_STUCK
+  ORDER_TO_PREPARE
+  DAILY_SUMMARY
+  PAYMENT_DUE_SOON
+  SALES_OPPORTUNITY
+  CUSTOM
+}
+
+enum AutomationRunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+enum RecommendationType {
+  LOW_STOCK
+  OUT_OF_STOCK
+  OVERDUE_DEBT
+  PAYMENT_DUE_SOON
+  INACTIVE_CUSTOMER
+  SALES_OPPORTUNITY
+  ORDER_PENDING_CONFIRMATION
+  ORDER_STUCK
+  ORDER_TO_PREPARE
+  DAILY_SUMMARY
+  ANOMALY
+}
+
+enum RecommendationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RecommendationStatus {
+  NEW
+  VIEWED
+  DISMISSED
+  ACTION_PREPARED
+  ACTIONED
+  EXPIRED
+}
+
+enum RecommendationActionType {
+  PREPARE_REMINDER
+  PREPARE_CAMPAIGN
+  OPEN_CUSTOMER
+  OPEN_ORDER
+  OPEN_PRODUCT
+}
+
+enum MarketingCampaignType {
+  CUSTOMER_REACTIVATION
+  PROMOTION
+  NEW_PRODUCT
+  LOW_ACTIVITY
+  CUSTOM
+}
+
+enum MarketingCampaignStatus {
+  DRAFT
+  READY
+  SCHEDULED
+  SENDING
+  SENT
+  PARTIAL
+  FAILED
+  CANCELLED
+}
+
+enum MarketingChannel {
+  WHATSAPP
+  OTHER
+}
+
+enum MarketingAudienceType {
+  INACTIVE_CUSTOMERS
+  CUSTOMER_TYPE
+  AREA
+  PRODUCT_BUYERS
+  ALL_OPTED_IN
+  CUSTOM
+}
+
+enum MarketingItemStatus {
+  PENDING
+  SKIPPED
+  SENDING
+  SENT
+  FAILED
+}
+
+enum NotificationType {
+  RECOMMENDATION
+  ORDER
+  DEBT
+  STOCK
+  SYSTEM
+}
+
+enum JobType {
+  AI_PROCESS
+  VOICE_TRANSCRIBE
+  AUTOMATION_RUN
+  WHATSAPP_SEND
+  DAILY_SUMMARY
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  DEAD
+}
+
+/// Regle d'automatisation configurable par organisation. `config` porte les
+/// seuils propres au type (JSON valide par la couche `automations/rules.ts`).
+/// Aucune regle a effet externe automatique n'est activee par defaut (§59).
+model AutomationRule {
+  id              String                  @id @default(cuid())
+  organizationId  String
+  organization    Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type            AutomationRuleType
+  name            String
+  description     String?
+  enabled         Boolean                 @default(false)
+  config          Json                    @default("{}")
+  /// Expression de planification indicative (ex : "daily@07:00"). Le scheduler
+  /// reste une abstraction : la logique n'est pas liee a un cron precis (§31).
+  schedule        String?
+  severity        RecommendationPriority?
+  createdByUserId String?
+  createdBy       User?                   @relation("AutomationRuleCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  lastRunAt       DateTime?
+
+  runs AutomationRun[]
+
+  @@unique([organizationId, type])
+  @@index([organizationId, enabled])
+  @@map("automation_rules")
+}
+
+/// Execution d'une passe d'automatisation (une regle, ou une passe globale si
+/// ruleId est nul).
+model AutomationRun {
+  id             String              @id @default(cuid())
+  organizationId String
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ruleId         String?
+  rule           AutomationRule?     @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  type           AutomationRuleType
+  status         AutomationRunStatus @default(PENDING)
+  startedAt      DateTime            @default(now())
+  completedAt    DateTime?
+  itemsDetected  Int                 @default(0)
+  errorCode      String?
+  metadata       Json?
+
+  @@index([organizationId, startedAt])
+  @@index([organizationId, type])
+  @@map("automation_runs")
+}
+
+/// Recommandation produite par un detecteur. Deduplication + cooldown via
+/// `dedupeKey` = organizationId + type + entityId + periodKey (§36-37).
+model BusinessRecommendation {
+  id                String                    @id @default(cuid())
+  organizationId    String
+  organization      Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type              RecommendationType
+  title             String
+  description       String
+  priority          RecommendationPriority    @default(MEDIUM)
+  status            RecommendationStatus      @default(NEW)
+  entityType        String?
+  entityId          String?
+  actionType        RecommendationActionType?
+  actionPayload     Json?
+  /// Cle de deduplication stable — un meme probleme sur une meme periode ne
+  /// cree qu'une recommandation active.
+  dedupeKey         String
+  /// Fenetre de refroidissement : tant que `cooldownUntil` est dans le futur,
+  /// le detecteur ne recree pas la meme recommandation (§37).
+  cooldownUntil     DateTime?
+  /// Snapshot lisible des faits (chiffres issus des services metier, pas du LLM).
+  facts             Json?
+  detectedAt        DateTime                  @default(now())
+  expiresAt         DateTime?
+  dismissedAt       DateTime?
+  dismissedByUserId String?
+  dismissedBy       User?                     @relation("RecommendationDismisser", fields: [dismissedByUserId], references: [id], onDelete: SetNull)
+  actedAt           DateTime?
+  /// Perimetre : recommandations liees a un commercial precis (scope SALES §41).
+  ownerUserId       String?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  @@unique([organizationId, dedupeKey])
+  @@index([organizationId, status, priority])
+  @@index([organizationId, type, status])
+  @@index([organizationId, ownerUserId, status])
+  @@map("business_recommendations")
+}
+
+/// Campagne marketing. Toujours preparee puis validee : aucun envoi sans
+/// approbation humaine et preview d'audience (§24, §27).
+model MarketingCampaign {
+  id               String                  @id @default(cuid())
+  organizationId   String
+  organization     Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name             String
+  type             MarketingCampaignType
+  status           MarketingCampaignStatus @default(DRAFT)
+  audienceType     MarketingAudienceType
+  audienceConfig   Json                    @default("{}")
+  message          String
+  channel          MarketingChannel        @default(WHATSAPP)
+  /// Modele WhatsApp approuve, requis pour un envoi hors fenetre 24 h (§25).
+  templateName     String?
+  templateLang     String?
+  createdByUserId  String
+  createdBy        User                    @relation("MarketingCampaignCreator", fields: [createdByUserId], references: [id])
+  approvedByUserId String?
+  approvedBy       User?                   @relation("MarketingCampaignApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  approvedAt       DateTime?
+  scheduledAt      DateTime?
+  sentAt           DateTime?
+  stats            Json?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  items MarketingCampaignItem[]
+
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt])
+  @@map("marketing_campaigns")
+}
+
+/// Ligne de campagne — un client, un message fige. Idempotence d'envoi par
+/// (campaignId, customerId) : un retry ne renvoie jamais deux fois (§30, §68).
+model MarketingCampaignItem {
+  id                String              @id @default(cuid())
+  organizationId    String
+  organization      Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  campaignId        String
+  campaign          MarketingCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customerId        String
+  customer          Customer            @relation(fields: [customerId], references: [id])
+  messageSnapshot   String
+  status            MarketingItemStatus @default(PENDING)
+  externalMessageId String?
+  sentAt            DateTime?
+  errorCode         String?
+  createdAt         DateTime            @default(now())
+
+  @@unique([campaignId, customerId])
+  @@index([organizationId])
+  @@index([campaignId, status])
+  @@map("marketing_campaign_items")
+}
+
+/// Notification interne (centre de notifications MVP in-app, §39-40).
+/// `userId` nul = notification a l'echelle de l'organisation (roles larges).
+model Notification {
+  id             String           @id @default(cuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?            @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  type           NotificationType
+  title          String
+  body           String
+  entityType     String?
+  entityId       String?
+  readAt         DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@index([organizationId, userId, readAt])
+  @@index([organizationId, createdAt])
+  @@map("notifications")
+}
+
+/// File de jobs — abstraction persistante (§32). Un adapter in-process la
+/// consomme aujourd'hui ; une vraie queue (BullMQ/Redis) pourra s'y substituer
+/// sans toucher aux producteurs. `dedupeKey` rend l'enqueue idempotent.
+model Job {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type           JobType
+  status         JobStatus     @default(PENDING)
+  payload        Json          @default("{}")
+  attempts       Int           @default(0)
+  maxAttempts    Int           @default(3)
+  runAfter       DateTime      @default(now())
+  lockedAt       DateTime?
+  lastError      String?
+  dedupeKey      String?       @unique
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  completedAt    DateTime?
+
+  @@index([status, runAfter])
+  @@index([organizationId, type, status])
+  @@map("jobs")
+}
+
+// Phase 8 : PRODUCTION + MONETISATION + PILOTE CLIENT
+//
+// Rien de nouveau côté métier. Objectif : déployable, testable par de vrais
+// clients, monétisable. Plans SaaS + Subscription + usage metering + feature
+// gating + support/feedback + suppression d'organisation encadrée.
+
+enum PlanCode {
+  STARTER
+  BUSINESS
+  PRO
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  SUSPENDED
+}
+
+enum UsageMetric {
+  AI_REQUESTS
+  AI_TOKENS
+  VOICE_SECONDS
+  WHATSAPP_MESSAGES
+  LANGUAGE_RESOLVES
+  MARKETING_SENDS
+}
+
+enum UsagePeriod {
+  DAY
+  MONTH
+}
+
+enum SupportTicketType {
+  BUG
+  QUESTION
+  BILLING
+  WHATSAPP
+  AI
+  VOICE
+  OTHER
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum FeedbackCategory {
+  BUG
+  SUGGESTION
+  AI
+  VOICE
+  WHATSAPP
+  OTHER
+}
+
+enum OrgDeletionStatus {
+  REQUESTED
+  GRACE_PERIOD
+  CANCELLED
+  COMPLETED
+}
+
+/// Catalogue de plans. Les limites et features vivent en JSON (configurables
+/// sans migration) — cf. `src/server/billing/plans.ts` pour les valeurs par
+/// défaut appliquées quand le champ est absent.
+model Plan {
+  id           String   @id @default(cuid())
+  code         PlanCode @unique
+  name         String
+  description  String?
+  /// Prix indicatif mensuel dans la plus petite unité (0 = sur devis / gratuit).
+  priceMonthly Int      @default(0)
+  currency     String   @default("XOF")
+  /// { AI_REQUESTS: 200, VOICE_SECONDS: 3600, ... } — clés = UsageMetric.
+  limits       Json     @default("{}")
+  /// { WHATSAPP: true, AI: true, VOICE: false, ... } — clés = Feature.
+  features     Json     @default("{}")
+  active       Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+/// Abonnement d'une organisation. Une seule ligne active par organisation.
+model Subscription {
+  id                 String             @id @default(cuid())
+  organizationId     String             @unique
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  planId             String
+  plan               Plan               @relation(fields: [planId], references: [id])
+  status             SubscriptionStatus @default(TRIAL)
+  /// Fournisseur de facturation ("manual", "stripe", …) — abstraction.
+  billingProvider    String             @default("manual")
+  externalCustomerId String?
+  startedAt          DateTime           @default(now())
+  trialEndsAt        DateTime?
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime?
+  cancelledAt        DateTime?
+  /// Surcharges de limites propres à ce client (rare : négociation pilote).
+  limitOverrides     Json?
+  featureOverrides   Json?
+  notes              String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([status])
+  @@map("subscriptions")
+}
+
+/// Compteur d'usage agrégé — une ligne par (organisation, métrique, période).
+/// Incrément atomique. Sert au metering et au contrôle de coût fournisseur.
+model UsageCounter {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  metric         UsageMetric
+  period         UsagePeriod
+  /// "2026-08-28" (DAY) ou "2026-08" (MONTH), fuseau de l'organisation.
+  periodKey      String
+  value          Int          @default(0)
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, metric, period, periodKey])
+  @@index([organizationId, periodKey])
+  @@map("usage_counters")
+}
+
+/// Ticket de support (pilote). Le contenu privé des conversations n'y est pas
+/// copié — uniquement ce que le commerçant décrit.
+model SupportTicket {
+  id             String              @id @default(cuid())
+  organizationId String
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  openedByUserId String?
+  openedBy       User?               @relation("SupportTicketOpener", fields: [openedByUserId], references: [id], onDelete: SetNull)
+  type           SupportTicketType   @default(OTHER)
+  subject        String
+  body           String
+  status         SupportTicketStatus @default(OPEN)
+  contactEmail   String?
+  resolutionNote String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([organizationId, status])
+  @@index([status, createdAt])
+  @@map("support_tickets")
+}
+
+/// Retour produit rapide (« Donner mon avis »).
+model Feedback {
+  id             String           @id @default(cuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  authorUserId   String?
+  author         User?            @relation("FeedbackAuthor", fields: [authorUserId], references: [id], onDelete: SetNull)
+  category       FeedbackCategory @default(OTHER)
+  message        String
+  /// Chemin de la page d'où le retour a été envoyé (contexte, sans PII).
+  path           String?
+  createdAt      DateTime         @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([category, createdAt])
+  @@map("feedback")
+}
+
+/// Demande de suppression d'organisation — jamais de suppression brutale.
+/// request → grace period → export possible → suppression/anonymisation.
+model OrganizationDeletionRequest {
+  id                String            @id @default(cuid())
+  organizationId    String            @unique
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  requestedByUserId String?
+  requestedBy       User?             @relation("OrgDeletionRequester", fields: [requestedByUserId], references: [id], onDelete: SetNull)
+  status            OrgDeletionStatus @default(REQUESTED)
+  reason            String?
+  /// Fin de la période de grâce : avant cette date, annulation possible.
+  purgeAfter        DateTime
+  cancelledAt       DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@map("organization_deletion_requests")
+}

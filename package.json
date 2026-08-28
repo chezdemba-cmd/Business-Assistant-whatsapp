@@ -1,0 +1,52 @@
+{
+  "name": "djeli-business-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Djeli's Business Assistant — copilote commercial WhatsApp + IA. Phase 1 : fondations (auth, multi-tenant, RBAC, onboarding).",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --env-file-if-exists=.env --test --test-reporter=spec \"tests/**/*.test.ts\"",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "db:seed": "node --env-file-if-exists=.env --import ./scripts/register-paths.mjs prisma/seed.ts",
+    "demo:seed": "node --env-file-if-exists=.env --import ./scripts/register-paths.mjs prisma/seed-staging.ts",
+    "demo:reset": "node --env-file-if-exists=.env --import ./scripts/register-paths.mjs scripts/demo-reset.ts",
+    "smoke": "node --env-file-if-exists=.env scripts/smoke.ts",
+    "check:env": "node --env-file-if-exists=.env scripts/check-env.ts",
+    "worker": "node --env-file-if-exists=.env scripts/worker.ts"
+  },
+  "prisma": {
+    "seed": "node --import ./scripts/register-paths.mjs prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.1.0",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6",
+    "libphonenumber-js": "^1.13.12",
+    "next": "^15.1.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "server-only": "^0.0.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.1.3",
+    "prisma": "^6.1.0",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

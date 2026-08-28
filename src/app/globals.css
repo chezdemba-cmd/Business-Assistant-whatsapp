@@ -1,0 +1,455 @@
+/* Djeli's Business Assistant — styles de base.
+   Tokens repris de la maquette `Djeli Business Assistant vb.html`. Pas de redesign. */
+
+:root {
+  --bg: #f5ead8;
+  --panel: #ebddc5;
+  --card: #f9f4ed;
+  --card-alt: #eee7db;
+  --border: #dcd3c4;
+  --border-soft: #eee7db;
+
+  --text: #201e1d;
+  --text-2: #645c50;
+  --text-3: #82796a;
+  --text-muted: #a19786;
+
+  --accent: #c67139;
+  --accent-hover: #b2622d;
+  --accent-active: #8c491a;
+  --on-accent: #fff2eb;
+
+  --ok-bg: #f0fae1;
+  --ok-fg: #56633f;
+  --green: #7a8a5e;
+
+  --warn-bg: #fff2eb;
+  --warn-border: #f0c9ae;
+  --warn-fg: #8c491a;
+
+  --ink: #201e1d;
+  --ink-2: #474238;
+
+  --font-display: "Caprasimo", Georgia, serif;
+  --font-sans: "Figtree", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius-pill: 999px;
+  --radius-card: 28px;
+  --radius-sm: 18px;
+  --shadow-card: 0 3px 10px rgba(46, 43, 37, 0.16);
+  --shadow-modal: 0 24px 60px rgba(46, 43, 37, 0.32);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--accent-active);
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(198, 113, 57, 0.3);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ---- primitives réutilisables ---- */
+
+.dj-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 28px;
+}
+
+.dj-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.dj-input {
+  height: 46px;
+  padding: 0 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: #fff;
+  font-size: 14px;
+  color: var(--text);
+  width: 100%;
+}
+.dj-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.dj-input[aria-invalid="true"] {
+  border-color: var(--warn-border);
+  background: var(--warn-bg);
+}
+
+.dj-input--readonly {
+  background: var(--card-alt);
+  color: var(--text-2);
+}
+
+.dj-error {
+  font-size: 12px;
+  color: var(--warn-fg);
+}
+
+.dj-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 22px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-size: 15px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.dj-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.dj-btn--primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 1px 2px rgba(46, 43, 37, 0.14);
+}
+.dj-btn--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.dj-btn--outline {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+}
+.dj-btn--outline:hover:not(:disabled) {
+  background: var(--card);
+}
+.dj-btn--ghost {
+  background: transparent;
+  color: var(--accent-active);
+}
+
+.dj-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 13px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--card-alt);
+  color: var(--text-2);
+}
+.dj-badge--accent {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+.dj-badge--ok {
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+}
+
+.dj-alert {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.dj-alert--error {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  color: var(--warn-fg);
+}
+.dj-alert--ok {
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+}
+.dj-alert--info {
+  background: var(--card-alt);
+  color: var(--text-2);
+}
+
+.dj-muted {
+  color: var(--text-3);
+}
+
+.dj-h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 36px;
+  line-height: 1.08;
+}
+
+.dj-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dj-page {
+  padding: 36px 32px 48px;
+}
+
+@media (max-width: 720px) {
+  .dj-page {
+    padding: 24px 18px 40px;
+  }
+  .dj-h1 {
+    font-size: 28px;
+  }
+}
+
+/* ---- écran d'authentification ---- */
+
+.auth-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  min-height: 100vh;
+}
+.auth-aside {
+  padding: 56px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--panel);
+}
+.auth-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-accent);
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+.auth-main {
+  padding: 56px 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auth-switch {
+  position: fixed;
+  bottom: 18px;
+  right: 24px;
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-3);
+  background: rgba(255, 255, 255, 0.75);
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+@media (max-width: 900px) {
+  .auth-grid {
+    grid-template-columns: 1fr;
+  }
+  .auth-aside {
+    padding: 40px 28px;
+  }
+  .auth-aside h1 {
+    font-size: 34px !important;
+  }
+  .auth-main {
+    padding: 32px 28px 64px;
+  }
+}
+
+/* ---- coquille application (sidebar + topbar) ---- */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 252px 1fr;
+  min-height: 100vh;
+  align-items: stretch;
+}
+.app-sidebar {
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  padding: 22px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.app-nav-section {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  color: var(--text-muted);
+  padding: 0 10px 6px;
+}
+.app-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+}
+.app-nav-link:hover {
+  background: var(--card-alt);
+  text-decoration: none;
+}
+.app-nav-link[data-active="true"] {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+.app-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.app-topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.app-profile-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 14px 5px 5px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  text-decoration: none;
+  color: inherit;
+}
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+  .app-sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    gap: 6px;
+    padding: 12px;
+  }
+  .app-sidebar .app-nav-section,
+  .app-sidebar .app-sidebar-footer {
+    display: none;
+  }
+  .app-topbar {
+    padding: 12px 18px;
+    flex-wrap: wrap;
+  }
+}
+
+/* ---- smartphone (largeur cible 375 px, §26) ---- */
+@media (max-width: 640px) {
+  .dj-page {
+    padding: 16px 12px 32px;
+  }
+  .dj-h1 {
+    font-size: 24px;
+  }
+  .app-nav-link {
+    font-size: 13px;
+    padding: 8px 10px;
+  }
+  .app-topbar {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .auth-switch {
+    right: 12px;
+    bottom: 12px;
+  }
+  /* Toute table large défile dans son conteneur plutôt que de casser la page. */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  /* Grilles à colonnes fixes → une seule colonne. */
+  [style*="gridTemplateColumns"],
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
