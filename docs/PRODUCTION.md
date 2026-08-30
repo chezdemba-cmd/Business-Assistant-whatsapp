@@ -18,7 +18,9 @@ dans un build). Les garde-fous (`productionGuardIssues`) ne s'appliquent que si
 - **web** : `npm run start` (Next, port 3000).
 - **worker** : `npm run worker` — process séparé, appelle les routes internes.
 - **database** : PostgreSQL 14+.
-- **redis** (optionnel mais recommandé multi-instance) : `RATE_LIMIT_STORE=redis` + `REDIS_URL`.
+- **rate-limit** : `RATE_LIMIT_STORE=memory` uniquement pour l'instant → **déploiement
+  mono-instance** (une seule instance web). Le mode `redis` (multi-instance) n'est
+  pas encore implémenté et est refusé au démarrage en `APP_ENV=production`.
 - **cron** (alternative au worker sur plateforme serverless) : `POST` toutes les
   N minutes sur `/api/internal/jobs/run`, `/api/internal/automations/run`,
   `/api/internal/maintenance/run` avec l'en-tête `x-automation-secret`.

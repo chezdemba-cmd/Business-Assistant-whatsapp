@@ -45,8 +45,11 @@ test("§54 : ALLOW_DEMO_SEED=1 en prod → bloqué", () => {
   assert.match(productionGuardIssues(env({ ALLOW_DEMO_SEED: "1" }))[0]!, /seed/i);
 });
 
-test("RATE_LIMIT_STORE=redis sans REDIS_URL → bloqué", () => {
-  assert.match(productionGuardIssues(env({ RATE_LIMIT_STORE: "redis" }))[0]!, /REDIS_URL/);
+test("RATE_LIMIT_STORE=redis → bloqué (non implémenté, mono-instance only)", () => {
+  assert.match(
+    productionGuardIssues(env({ RATE_LIMIT_STORE: "redis" }))[0]!,
+    /pas encore implémenté|memory/i,
+  );
 });
 
 test("§7 : AI_PROVIDER=openai-compatible sans AI_API_KEY → bloqué", () => {

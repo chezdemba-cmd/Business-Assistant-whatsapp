@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/server/db/client";
 import { getEnv } from "@/lib/env";
 import { hasExceptionSink } from "@/server/errors";
+import { getRateLimitStore } from "@/server/ratelimit/store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -43,7 +44,10 @@ export async function GET() {
       db,
       dbLatencyMs,
       queue: { store: "db", stuckJobs },
-      rateLimitStore: env.RATE_LIMIT_STORE,
+      // Store RÉELLEMENT actif (peut différer de la config si un backend
+      // demandé n'est pas implémenté).
+      rateLimitStore: getRateLimitStore().kind,
+      rateLimitStoreRequested: env.RATE_LIMIT_STORE,
       providers: {
         whatsapp: env.WHATSAPP_PROVIDER,
         ai: env.AI_PROVIDER,

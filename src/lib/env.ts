@@ -194,8 +194,14 @@ export function productionGuardIssues(env: Env): string[] {
       issues.push("WHATSAPP_PROVIDER=meta exige WHATSAPP_TOKEN_ENCRYPTION_KEY (chiffrement des tokens en base).");
     }
   }
-  if (env.RATE_LIMIT_STORE === "redis" && !env.REDIS_URL) {
-    issues.push("RATE_LIMIT_STORE=redis exige REDIS_URL.");
+  if (env.RATE_LIMIT_STORE === "redis") {
+    // Aucun store Redis n'est implémenté à ce jour : `redis` retomberait
+    // silencieusement sur la mémoire (rate-limit par instance). On refuse
+    // explicitement plutôt que de laisser croire à un partage multi-instance.
+    issues.push(
+      "RATE_LIMIT_STORE=redis n'est pas encore implémenté : utiliser \"memory\" " +
+        "(déploiement mono-instance) tant qu'un RedisRateLimitStore n'a pas été ajouté.",
+    );
   }
   if (env.ALLOW_DEMO_SEED === "1") {
     issues.push("ALLOW_DEMO_SEED=1 en production : le seed de démonstration ne doit jamais tourner en prod.");
