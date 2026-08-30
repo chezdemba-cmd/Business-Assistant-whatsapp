@@ -9,8 +9,20 @@ import { writeAuditLog } from "@/server/audit/log";
 import { AppError, Conflict, RateLimited } from "@/server/errors";
 import { getEnv } from "@/lib/env";
 import { consumeRateLimit } from "@/server/ratelimit/store";
-import { registerSchema, loginSchema } from "@/server/validation/schemas";
+import {
+  registerSchema,
+  loginSchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema,
+} from "@/server/validation/schemas";
 import { normalizePhone } from "@/lib/identifiers";
+import {
+  issuePasswordResetToken,
+  verifyPasswordResetToken,
+  resetTokenMatchesAccount,
+} from "@/server/auth/password-reset";
+import { getEmailProvider } from "@/server/email/provider";
+import { logError } from "@/server/errors";
 import { runAction, formToObject } from "./runner";
 import type { ActionResult } from "@/lib/result";
 
@@ -127,6 +139,118 @@ export async function loginAction(
       where: { userId: user.id, status: { not: "SUSPENDED" } },
     });
 
+    return { redirectTo: membershipCount > 0 ? "/dashboard" : "/onboarding" };
+  });
+}
+
+// ── Mot de passe oublié ───────────────────────────────────────────────
+
+type Sent = { sent: true };
+
+/**
+ * Demande de réinitialisation. Réponse TOUJOURS identique (pas d'énumération de
+ * comptes). Rate-limité par IP. L'e-mail part via le provider configuré
+ * (`log` par défaut : le lien est journalisé, pas envoyé).
+ */
+export async function requestPasswordResetAction(
+  _prev: FormState<Sent>,
+  formData: FormData,
+): Promise<ActionResult<Sent>> {
+  return runAction(async () => {
+    const ip = await callerIp();
+    const rl = await consumeRateLimit(
+      `pwreset:${ip}`,
+      getEnv().LOGIN_RATE_LIMIT_PER_MIN,
+      60_000,
+    );
+    if (!rl.allowed) {
+      throw RateLimited("Trop de demandes. Réessayez dans une minute.");
+    }
+
+    const { email } = requestPasswordResetSchema.parse(formToObject(formData));
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (user && user.status === "ACTIVE" && user.passwordHash) {
+      try {
+        const token = await issuePasswordResetToken(user.id, user.passwordChangedAt);
+        const url = `${getEnv().NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(token)}`;
+        await getEmailProvider().send({
+          to: email,
+          subject: "Réinitialisation de votre mot de passe Djeli",
+          text:
+            `Bonjour,\n\nVous avez demandé à réinitialiser votre mot de passe Djeli.\n` +
+            `Ouvrez ce lien (valable 1 heure) :\n\n${url}\n\n` +
+            `Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail : ` +
+            `votre mot de passe reste inchangé.`,
+        });
+        await writeAuditLog({
+          action: "PASSWORD_RESET_REQUESTED",
+          entityType: "user",
+          entityId: user.id,
+          actorUserId: user.id,
+        });
+      } catch (e) {
+        // L'échec d'envoi ne doit pas révéler l'existence du compte.
+        logError("auth.passwordReset.request", e, { email });
+      }
+    }
+
+    return { sent: true as const };
+  });
+}
+
+/**
+ * Application du nouveau mot de passe. Vérifie le token (signature + expiration
+ * + usage unique via `passwordChangedAt`), met à jour le hash, invalide toutes
+ * les sessions antérieures et ouvre une session fraîche.
+ */
+export async function resetPasswordAction(
+  _prev: FormState<Redirect>,
+  formData: FormData,
+): Promise<ActionResult<Redirect>> {
+  return runAction(async () => {
+    const input = resetPasswordSchema.parse(formToObject(formData));
+
+    const claims = await verifyPasswordResetToken(input.token);
+    if (!claims) {
+      throw new AppError(
+        "VALIDATION",
+        "Ce lien de réinitialisation est invalide ou expiré. Refaites une demande.",
+      );
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: claims.userId } });
+    if (!user || user.status !== "ACTIVE") {
+      throw new AppError("VALIDATION", "Ce lien n'est plus valable.");
+    }
+    if (!resetTokenMatchesAccount(claims, user.passwordChangedAt)) {
+      throw new AppError(
+        "VALIDATION",
+        "Ce lien a déjà été utilisé ou le mot de passe a changé depuis. Refaites une demande.",
+      );
+    }
+
+    const now = new Date();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: await hashPassword(input.password),
+        passwordChangedAt: now,
+        // Révocation dure : toute session existante est rejetée.
+        sessionInvalidBefore: now,
+      },
+    });
+    await writeAuditLog({
+      action: "PASSWORD_RESET_COMPLETED",
+      entityType: "user",
+      entityId: user.id,
+      actorUserId: user.id,
+    });
+
+    await createSession(user.id);
+    const membershipCount = await prisma.organizationMember.count({
+      where: { userId: user.id, status: { not: "SUSPENDED" } },
+    });
     return { redirectTo: membershipCount > 0 ? "/dashboard" : "/onboarding" };
   });
 }

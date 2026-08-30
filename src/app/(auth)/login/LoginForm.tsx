@@ -54,6 +54,12 @@ export function LoginForm({ next }: { next?: string }) {
         />
       </Field>
 
+      <p style={{ margin: "-6px 0 0", fontSize: 13 }}>
+        <a href="/forgot-password" style={{ color: "var(--text-3)", fontWeight: 600 }}>
+          Mot de passe oublié ?
+        </a>
+      </p>
+
       <SubmitButton>Continuer</SubmitButton>
 
       <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0 }}>

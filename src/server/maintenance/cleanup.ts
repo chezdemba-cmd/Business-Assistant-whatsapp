@@ -3,6 +3,7 @@ import { prisma } from "@/server/db/client";
 import { logger } from "@/lib/logger";
 import { expireEndedTrials } from "@/server/billing/subscription-service";
 import { shouldRetry } from "@/server/jobs/retry";
+import { purgeExpiredDeletionRequests } from "@/server/org/deletion-service";
 
 /**
  * Tâches d'entretien périodiques (§10). Idempotentes, sans effet externe.
@@ -21,6 +22,7 @@ export type MaintenanceResult = {
   recommendationsExpired: number;
   trialsEnded: number;
   deletionsCompleted: number;
+  deletionsFailed: number;
   jobsRequeued: number;
   jobsDead: number;
 };
@@ -33,6 +35,7 @@ export async function runMaintenance(now: Date = new Date()): Promise<Maintenanc
     recommendationsExpired: 0,
     trialsEnded: 0,
     deletionsCompleted: 0,
+    deletionsFailed: 0,
     jobsRequeued: 0,
     jobsDead: 0,
   };
@@ -112,14 +115,12 @@ export async function runMaintenance(now: Date = new Date()): Promise<Maintenanc
   // Essais échus → PAST_DUE (n'interrompt pas brutalement le service, §19).
   res.trialsEnded = await expireEndedTrials(now);
 
-  // Demandes de suppression : fin de période de grâce → à traiter (purge
-  // administrative). On marque COMPLETED, la purge réelle reste manuelle.
-  res.deletionsCompleted = (
-    await prisma.organizationDeletionRequest.updateMany({
-      where: { status: { in: ["REQUESTED", "GRACE_PERIOD"] }, purgeAfter: { lt: now } },
-      data: { status: "COMPLETED", completedAt: now },
-    })
-  ).count;
+  // Demandes de suppression : fin de période de grâce → PURGE EFFECTIVE (§28).
+  // L'organisation et toutes ses données sont supprimées (cascades FK) ; une
+  // entrée d'audit ORGANIZATION_PURGED en conserve la trace.
+  const purge = await purgeExpiredDeletionRequests(now);
+  res.deletionsCompleted = purge.purged;
+  res.deletionsFailed = purge.failed;
 
   logger.info("maintenance.run", { service: "maintenance", event: "completed", ...res });
   return res;

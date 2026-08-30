@@ -58,6 +58,21 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Mot de passe requis"),
 });
 
+export const requestPasswordResetSchema = z.object({
+  email: emailField,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(10, "Lien de réinitialisation invalide"),
+    password: passwordField,
+    confirmPassword: z.string(),
+  })
+  .refine((v) => v.password === v.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Les mots de passe ne correspondent pas",
+  });
+
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Mot de passe actuel requis"),

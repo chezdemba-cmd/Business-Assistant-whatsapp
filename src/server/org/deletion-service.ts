@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/server/db/client";
-import { Conflict, NotFound } from "@/server/errors";
+import { Conflict, NotFound, logError } from "@/server/errors";
 import { writeAuditLog } from "@/server/audit/log";
 
 /**
@@ -81,4 +81,73 @@ export async function cancelOrganizationDeletion(input: {
 
 export function getDeletionRequest(organizationId: string) {
   return prisma.organizationDeletionRequest.findUnique({ where: { organizationId } });
+}
+
+/**
+ * Purge effective (§28) : pour chaque demande dont la période de grâce est
+ * écoulée et qui n'a pas été annulée, l'organisation et TOUTES ses données sont
+ * supprimées (cascades FK natives `ON DELETE CASCADE`). La `OrganizationDeletionRequest`
+ * disparaît avec l'organisation ; une entrée d'audit `ORGANIZATION_PURGED` en
+ * conserve la trace (les `audit_logs` survivent — `organizationId` passe à NULL,
+ * les détails restent dans `metadata`).
+ *
+ * Appelé par `runMaintenance()`. Une erreur sur une organisation n'interrompt
+ * pas le traitement des autres.
+ */
+export async function purgeExpiredDeletionRequests(
+  now: Date = new Date(),
+): Promise<{ purged: number; failed: number }> {
+  const due = await prisma.organizationDeletionRequest.findMany({
+    where: {
+      status: { in: ["REQUESTED", "GRACE_PERIOD"] },
+      purgeAfter: { lt: now },
+    },
+    select: { organizationId: true, requestedByUserId: true, reason: true },
+  });
+
+  let purged = 0;
+  let failed = 0;
+  for (const req of due) {
+    try {
+      const org = await prisma.organization.findUnique({
+        where: { id: req.organizationId },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          _count: { select: { customers: true, orders: true, members: true, messages: true } },
+        },
+      });
+
+      await writeAuditLog({
+        action: "ORGANIZATION_PURGED",
+        entityType: "organization",
+        entityId: req.organizationId,
+        organizationId: req.organizationId,
+        actorUserId: req.requestedByUserId ?? null,
+        metadata: {
+          name: org?.name ?? null,
+          slug: org?.slug ?? null,
+          reason: req.reason ?? null,
+          counts: org?._count ?? null,
+          purgedAt: now.toISOString(),
+        },
+      });
+
+      if (org) {
+        await prisma.organization.delete({ where: { id: req.organizationId } });
+      } else {
+        // Organisation déjà absente : on solde la demande orpheline.
+        await prisma.organizationDeletionRequest.updateMany({
+          where: { organizationId: req.organizationId },
+          data: { status: "COMPLETED", completedAt: now },
+        });
+      }
+      purged += 1;
+    } catch (e) {
+      failed += 1;
+      logError("org.deletion.purge", e, { organizationId: req.organizationId });
+    }
+  }
+  return { purged, failed };
 }
