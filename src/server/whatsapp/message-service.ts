@@ -64,7 +64,10 @@ export async function sendAiConversationMessage(input: {
 
   const conversation = await prisma.conversation.findFirst({
     where: { id: input.conversationId, organizationId: input.organizationId },
-    include: { whatsappConnection: true },
+    include: {
+      whatsappConnection: true,
+      organization: { select: { timezone: true } },
+    },
   });
   if (!conversation) throw NotFound("Conversation introuvable.");
   if (conversation.whatsappConnection.status !== "CONNECTED") {
@@ -104,7 +107,12 @@ export async function sendAiConversationMessage(input: {
   });
 
   if (result.ok) {
-    void recordUsage(input.organizationId, "WHATSAPP_MESSAGES", 1, "UTC");
+    void recordUsage(
+      input.organizationId,
+      "WHATSAPP_MESSAGES",
+      1,
+      conversation.organization.timezone,
+    );
   }
   return { messageId: message.id, status: result.ok ? "SENT" : "FAILED" };
 }
@@ -139,6 +147,7 @@ export async function sendConversationMessage(
     include: {
       whatsappConnection: true,
       customer: { select: { id: true } },
+      organization: { select: { timezone: true } },
     },
   });
   if (!conversation) {
@@ -238,7 +247,12 @@ export async function sendConversationMessage(
     );
   }
 
-  void recordUsage(input.organizationId, "WHATSAPP_MESSAGES", 1, "UTC");
+  void recordUsage(
+    input.organizationId,
+    "WHATSAPP_MESSAGES",
+    1,
+    conversation.organization.timezone,
+  );
   return {
     messageId: message.id,
     status: "SENT",

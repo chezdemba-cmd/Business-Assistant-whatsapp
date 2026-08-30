@@ -106,6 +106,10 @@ export function isAppError(e: unknown): e is AppError {
  */
 type ExceptionSink = (context: string, error: unknown, fields?: Record<string, unknown>) => void;
 let exceptionSink: ExceptionSink | null = null;
+/** `true` si un vrai récepteur d'exceptions est branché (SDK installé). */
+export function hasExceptionSink(): boolean {
+  return exceptionSink != null;
+}
 export function setExceptionSink(sink: ExceptionSink | null): void {
   exceptionSink = sink;
 }

@@ -41,11 +41,23 @@ jobs:
       - name: Install
         run: npm ci
 
+      # Bloque uniquement sur une vulnérabilité CRITICAL dans l'arbre de prod.
+      - name: Audit production dependencies (blocking on critical)
+        run: npm audit --omit=dev --audit-level=critical
+
+      # Informe sur les high/moderate sans bloquer (aujourd'hui : outillage de
+      # build — postcss via next, deepmerge-ts via prisma). À traiter au bump next.
+      - name: Audit report (non-blocking)
+        run: npm audit --omit=dev || true
+
       - name: Validate environment
         run: npm run check:env
 
       - name: Prisma generate
         run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
 
       - name: Apply migrations (staging DB)
         run: npx prisma migrate deploy

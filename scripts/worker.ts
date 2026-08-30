@@ -14,8 +14,27 @@
  *
  * Sur une plateforme sans process long (serverless pur), remplacer par un cron
  * qui frappe ces trois routes.
+ *
+ * Suivi d'erreurs : le worker est volontairement sans dépendance applicative
+ * (fetch + process.env). Les exceptions non gérées sont journalisées en JSON
+ * structuré ci-dessous. Quand un SDK (`@sentry/node`) sera ajouté, appeler
+ * `installErrorTracking()` ici (script lancé avec `--import ./scripts/register-paths.mjs`).
  */
 import { setTimeout as sleep } from "node:timers/promises";
+
+/** Journalise une exception non gérée sans tuer la boucle du worker. */
+function logFatal(kind: string, err: unknown): void {
+  console.error(
+    JSON.stringify({
+      ts: new Date().toISOString(),
+      level: "error",
+      worker: kind,
+      error: err instanceof Error ? `${err.name}: ${err.message}` : String(err),
+    }),
+  );
+}
+process.on("unhandledRejection", (reason) => logFatal("unhandledRejection", reason));
+process.on("uncaughtException", (err) => logFatal("uncaughtException", err));
 
 const BASE = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
 const SECRET = process.env.AUTOMATION_CRON_SECRET ?? "";

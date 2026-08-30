@@ -42,8 +42,8 @@ d'Afrique de l'Ouest.
   Phone Number ID, **identification / création client** (source `WHATSAPP`),
   `Conversation` + `Message`, réponse humaine depuis l'app via un **provider
   abstrait** (`mock` / `meta`), statuts `SENT/DELIVERED/READ` sans régression,
-  **fenêtre de service 24 h**, modes **AUTO / HUMAIN / EN PAUSE** (AUTO ne
-  répond pas — préparé pour la Phase 6), assignation + périmètre SALES.
+  **fenêtre de service 24 h**, modes **AUTO / HUMAIN / EN PAUSE** (en AUTO,
+  Djeli IA répond — cf. Phase 6), assignation + périmètre SALES.
 
 - Phase 6 : **Djeli IA** — provider LLM abstrait (`mock` / `openai-compatible`),
   prompt système central **versionné**, classification d'intention + niveau de

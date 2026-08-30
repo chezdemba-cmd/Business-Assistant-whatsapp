@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/server/db/client";
 import { getEnv } from "@/lib/env";
+import { hasExceptionSink } from "@/server/errors";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -49,7 +50,13 @@ export async function GET() {
         voice: env.VOICE_PROVIDER,
         billing: env.BILLING_PROVIDER,
       },
-      errorTracking: env.SENTRY_DSN ? "configured" : "none",
+      // "active" = un SDK capture réellement ; "dsn-set-no-sdk" = DSN fourni
+      // mais aucun récepteur branché (erreurs en logs seulement) ; "logs-only".
+      errorTracking: hasExceptionSink()
+        ? "active"
+        : env.SENTRY_DSN
+          ? "dsn-set-no-sdk"
+          : "logs-only",
     },
     { status: ok ? 200 : 503 },
   );

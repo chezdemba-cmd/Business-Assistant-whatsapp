@@ -1,0 +1,30 @@
+# Contexte de build minimal — le runtime réinstalle/rebuild ce qu'il faut.
+node_modules
+.next
+out
+build
+dist
+coverage
+
+.git
+.github
+.gitignore
+.gitattributes
+
+# env / secrets — jamais dans l'image
+.env
+.env.*
+!.env.example
+
+# docs & tests non nécessaires au runtime
+docs
+tests
+*.md
+!README.md
+
+# divers
+.DS_Store
+*.log
+.vscode
+.idea
+*.tsbuildinfo

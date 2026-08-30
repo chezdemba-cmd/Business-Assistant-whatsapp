@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getEnv } from "@/lib/env";
+import { secretsMatch } from "@/lib/secret-compare";
 import { runMaintenance } from "@/server/maintenance/cleanup";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
   if (!secret) {
     return NextResponse.json({ error: "AUTOMATION_CRON_SECRET non configuré." }, { status: 503 });
   }
-  if (request.headers.get("x-automation-secret") !== secret) {
+  if (!secretsMatch(request.headers.get("x-automation-secret"), secret)) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
   const result = await runMaintenance();

@@ -115,6 +115,10 @@ const schema = z.object({
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   /** DSN Sentry (ou équivalent) — capture d'erreurs. Optionnel. */
   SENTRY_DSN: z.string().url().optional(),
+  /** E-mail transactionnel : "log" (défaut, journalise sans envoyer) ; "resend"/"smtp" à implémenter. */
+  EMAIL_PROVIDER: z.enum(["log", "resend", "smtp"]).default("log"),
+  /** Expéditeur par défaut des e-mails transactionnels. */
+  EMAIL_FROM: z.string().min(1).optional(),
   /** Durée d'essai par défaut d'un nouvel abonnement (jours). */
   TRIAL_DAYS: z.coerce.number().int().positive().max(365).default(14),
   /** Fournisseur de facturation : "manual" (pilote) ou "stripe". */
@@ -172,6 +176,23 @@ export function productionGuardIssues(env: Env): string[] {
     issues.push(
       "WHATSAPP_PROVIDER=mock interdit en production (WHATSAPP_PROVIDER=meta ou WHATSAPP_ALLOW_MOCK_IN_PROD=1).",
     );
+  }
+  if (env.AI_PROVIDER === "openai-compatible" && !env.AI_API_KEY) {
+    issues.push("AI_PROVIDER=openai-compatible exige AI_API_KEY.");
+  }
+  if (env.VOICE_PROVIDER === "openai-compatible" && !env.VOICE_API_KEY) {
+    issues.push("VOICE_PROVIDER=openai-compatible exige VOICE_API_KEY.");
+  }
+  if (env.WHATSAPP_PROVIDER === "meta") {
+    if (!env.META_APP_SECRET) {
+      issues.push("WHATSAPP_PROVIDER=meta exige META_APP_SECRET (vérification de signature webhook).");
+    }
+    if (!env.META_WEBHOOK_VERIFY_TOKEN) {
+      issues.push("WHATSAPP_PROVIDER=meta exige META_WEBHOOK_VERIFY_TOKEN (handshake webhook).");
+    }
+    if (!env.WHATSAPP_TOKEN_ENCRYPTION_KEY) {
+      issues.push("WHATSAPP_PROVIDER=meta exige WHATSAPP_TOKEN_ENCRYPTION_KEY (chiffrement des tokens en base).");
+    }
   }
   if (env.RATE_LIMIT_STORE === "redis" && !env.REDIS_URL) {
     issues.push("RATE_LIMIT_STORE=redis exige REDIS_URL.");

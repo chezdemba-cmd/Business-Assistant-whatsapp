@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getEnv } from "@/lib/env";
+import { secretsMatch } from "@/lib/secret-compare";
 import { registerAllJobHandlers } from "@/server/jobs/handlers";
 import { runPendingJobs } from "@/server/jobs/queue";
 
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
       { status: 503 },
     );
   }
-  if (request.headers.get("x-automation-secret") !== secret) {
+  if (!secretsMatch(request.headers.get("x-automation-secret"), secret)) {
     return NextResponse.json({ error: "Non autorisé." }, { status: 401 });
   }
 

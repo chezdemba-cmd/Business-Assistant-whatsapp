@@ -29,6 +29,16 @@ export async function registerAction(
   formData: FormData,
 ): Promise<ActionResult<Redirect>> {
   return runAction(async () => {
+    const ip = await callerIp();
+    const rl = await consumeRateLimit(
+      `register:${ip}`,
+      getEnv().LOGIN_RATE_LIMIT_PER_MIN,
+      60_000,
+    );
+    if (!rl.allowed) {
+      throw RateLimited("Trop de tentatives d'inscription. Réessayez dans une minute.");
+    }
+
     const input = registerSchema.parse(formToObject(formData));
 
     const existing = await prisma.user.findUnique({

@@ -32,6 +32,12 @@ COPY --from=build /app/tsconfig.json ./tsconfig.json
 
 EXPOSE 3000
 
+# Liveness : le process répond-il en HTTP ? On accepte n'importe quelle réponse
+# (même 503 « DB down ») — seul un échec de connexion signale un process mort.
+# La READINESS (DB + migrations) se contrôle séparément via GET /api/readiness.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=25s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:3000/api/health').then(()=>process.exit(0)).catch(()=>process.exit(1))"
+
 # Web :   docker run <image>
 # Worker: docker run <image> npm run worker
 # Migrations (release step): docker run <image> npx prisma migrate deploy

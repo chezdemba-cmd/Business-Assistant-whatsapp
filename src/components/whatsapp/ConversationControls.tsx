@@ -52,7 +52,8 @@ export function ConversationModeControls({
       </div>
       <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
         Mode actuel : <strong>{CONVERSATION_MODE_LABEL[mode]}</strong>. En AUTO,
-        Djeli IA ne répond pas encore (Phase 6).
+        Djeli IA répond automatiquement (lecture seule) et passe la main à un
+        humain en cas de doute.
       </span>
       {state && !state.ok ? <span className="dj-error">{state.error}</span> : null}
     </div>
