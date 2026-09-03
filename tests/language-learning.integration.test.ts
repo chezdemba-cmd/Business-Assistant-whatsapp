@@ -1,68 +1,112 @@
-import { test } from "node:test";
+import { test, before, after } from "node:test";
+import assert from "node:assert/strict";
 
 /**
- * Tests d'INTÉGRATION Djeli Learning Loop. Nécessitent PostgreSQL :
- *   RUN_DB_TESTS=1 DATABASE_URL=postgres://… npm test
+ * Tests d'INTÉGRATION Djeli Learning Loop (§6D, §34, §55) — INVARIANT CLÉ :
+ * la promotion d'un candidat ne crée JAMAIS une entrée VALIDATED ni une entrée
+ * GLOBAL automatiquement. Elle produit une entrée SUGGESTED dans le scope
+ * suggéré, qu'un humain devra valider séparément.
  *
- * Scénarios attendus (§51–§61, §63) :
- *
- *  §51 ORGANIZATION — 3 corrections identiques dans Org A uniquement →
- *      recompute crée un LearningCandidate scopeSuggestion=ORGANIZATION,
- *      jamais DOMAIN/GLOBAL.
- *
- *  §52 DOMAIN — même correction dans ≥ 3 organisations du domaine commerce →
- *      scopeSuggestion=DOMAIN(commerce), requiresStrongReview=true.
- *
- *  §53 GLOBAL SAFETY — 100 occurrences mais correction non anonymisable
- *      (sanitizedText null) → shareable=false → scopeSuggestion=ORGANIZATION,
- *      jamais GLOBAL.
- *
- *  §54 DUPLICATE — recomputeLearningCandidates() lancé 2× → même dedupeKey,
- *      pas de doublon, occurrenceCount/correctionCount cohérents.
- *
- *  §55 PII — correction contenant téléphone + nom non masquable →
- *      sanitizedText null (observation-service) → candidat non partageable.
- *
- *  §56 PROMOTION — candidate APPROVED → promoteLearningCandidate() crée une
- *      LanguageEntry status SUGGESTED ; resolve standard NE l'utilise pas.
- *      Après validateEntry (permission séparée) → resolve l'utilise.
- *
- *  §57 PRIORITY — une entrée ORGANIZATION VALIDATED continue de battre
- *      DOMAIN/GLOBAL après passage du Learning Loop (ordre inchangé).
- *
- *  §58 CONFLICT — candidat dont la forme canonique existe déjà (sens différent
- *      ou entrée VALIDATED) → status CONFLICT, conflictEntryId renseigné,
- *      promoteLearningCandidate() refuse (aucune fusion auto).
- *
- *  §59 RBAC — client API avec language.write mais sans language.review →
- *      403 sur approve/reject/promote/recompute. Reviewer (language.review) → OK.
- *      Validation finale d'entrée reste language.validate.
- *
- *  §60 TENANT — Org A ne voit pas les observations / candidats ORGANIZATION
- *      d'Org B (organizationId scoping + hash côté preuve).
- *
- *  §61 EXPORT — buildLearningDataset() ne renvoie que des candidats
- *      APPROVED/PROMOTED shareable, texte ré-anonymisé, sans PII.
- *
- *  §63 INVARIANT — aucune donnée ne devient GLOBAL VALIDATED automatiquement :
- *      promoteLearningCandidate() vise toujours SUGGESTED (assertPromotionStatus).
- *
- * Garanties déjà couvertes sans DB :
- *  - `calculateCandidateScore` / `explainScore` : bornés, déterministes, lisibles.
- *  - `suggestScope` : 1 org → ORGANIZATION, non-shareable → ORGANIZATION,
- *    GLOBAL seulement multi-domaines + forte diversité.
- *  - `candidateDedupeKey` : stable, org-agnostique pour GLOBAL/DOMAIN.
- *  - `assertPromotionStatus` : rejette VALIDATED / GLOBAL / OBSERVED.
- *  - `submitObservation` : idempotencyKey → pas de doublon sur retry.
+ *   DATABASE_URL="postgresql://…/djeli_test" RUN_DB_TESTS=1 npm test
  */
 
 const RUN = process.env.RUN_DB_TESTS === "1" || process.env.RUN_DB_TESTS === "true";
+const DB_URL = process.env.DATABASE_URL ?? "";
+const ENABLED = RUN && /(_test|_shadow|localhost|127\.0\.0\.1)/.test(DB_URL);
+const suiteOpts = ENABLED
+  ? {}
+  : { skip: !RUN ? "RUN_DB_TESTS non défini" : "DATABASE_URL hors base de test" };
 
-test(
-  "intégration Djeli Learning Loop (nécessite RUN_DB_TESTS + DB)",
-  {
-    skip: !RUN,
-    todo: "À implémenter : recomputeLearningCandidates / approveCandidate / promoteLearningCandidate / buildLearningDataset sur une base de test.",
-  },
-  () => {},
-);
+type Deps = {
+  lcDb: import("@prisma/client").PrismaClient;
+  approve: typeof import("../src/language-core/learning/review-service.ts")["approveCandidate"];
+  promote: typeof import("../src/language-core/learning/promotion-service.ts")["promoteLearningCandidate"];
+};
+let d: Deps;
+
+const TAG = `${Date.now()}`;
+const REF = `test:${TAG}`;
+const ORG = `it-ll-org-${TAG}`;
+const TERM = `dolo${TAG}`;
+let candidateId = "";
+
+before(async () => {
+  if (!ENABLED) return;
+  const [{ lcDb }, rev, promo] = await Promise.all([
+    import("../src/language-core/db.ts"),
+    import("../src/language-core/learning/review-service.ts"),
+    import("../src/language-core/learning/promotion-service.ts"),
+  ]);
+  d = { lcDb, approve: rev.approveCandidate, promote: promo.promoteLearningCandidate };
+
+  const now = new Date();
+  const c = await d.lcDb.learningCandidate.create({
+    data: {
+      dedupeKey: `dk-${TAG}`,
+      language: "BM",
+      scopeSuggestion: "ORGANIZATION",
+      organizationId: ORG,
+      candidateType: "NEW_ENTRY",
+      canonicalText: TERM,
+      normalizedText: TERM,
+      proposedMeaning: "bière de mil",
+      occurrenceCount: 5,
+      organizationCount: 1,
+      correctionCount: 3,
+      confidenceScore: 0.7,
+      evidenceSummary: {},
+      firstSeenAt: now,
+      lastSeenAt: now,
+      status: "NEW",
+    },
+  });
+  candidateId = c.id;
+});
+
+after(async () => {
+  if (!ENABLED || !d?.lcDb) return;
+  await d.lcDb.learningReview.deleteMany({ where: { candidateId } }).catch(() => {});
+  await d.lcDb.learningCandidate.deleteMany({ where: { dedupeKey: `dk-${TAG}` } }).catch(() => {});
+  await d.lcDb.languageAuditLog.deleteMany({ where: { actorRef: REF } }).catch(() => {});
+  await d.lcDb.languageEntry.deleteMany({ where: { createdByRef: REF } }).catch(() => {});
+  await d.lcDb.$disconnect();
+});
+
+test("un candidat NEW ne peut pas être promu directement", suiteOpts, async () => {
+  await assert.rejects(
+    () => d.promote({ candidateId, actorRef: REF }),
+    /APPROVED peut être promu/i,
+  );
+});
+
+test("approve → promote : entrée SUGGESTED dans le scope suggéré, JAMAIS VALIDATED ni GLOBAL", suiteOpts, async () => {
+  const approved = await d.approve({ candidateId, actorRef: REF });
+  assert.equal(approved.status, "APPROVED");
+
+  const res = await d.promote({ candidateId, actorRef: REF });
+  assert.equal(res.kind, "entry");
+
+  const entry = await d.lcDb.languageEntry.findUniqueOrThrow({ where: { id: res.entryId } });
+  assert.notEqual(entry.status, "VALIDATED", "INVARIANT : jamais VALIDATED automatiquement");
+  assert.equal(entry.status, "SUGGESTED");
+  assert.notEqual(entry.scope, "GLOBAL", "INVARIANT : jamais GLOBAL automatiquement");
+  assert.equal(entry.scope, "ORGANIZATION");
+  assert.equal(entry.organizationId, ORG);
+  assert.equal(entry.meaning, "bière de mil");
+
+  const cand = await d.lcDb.learningCandidate.findUniqueOrThrow({ where: { id: candidateId } });
+  assert.equal(cand.status, "PROMOTED");
+  assert.equal(cand.promotedEntryId, res.entryId);
+});
+
+test("promotion idempotente : re-promouvoir renvoie la même entrée, sans doublon", suiteOpts, async () => {
+  const countBefore = await d.lcDb.languageEntry.count({ where: { createdByRef: REF } });
+  const again = await d.promote({ candidateId, actorRef: REF });
+  assert.equal(again.kind, "already");
+  const countAfter = await d.lcDb.languageEntry.count({ where: { createdByRef: REF } });
+  assert.equal(countAfter, countBefore, "aucune entrée supplémentaire créée");
+});
+
+test("approuver un candidat déjà promu est refusé", suiteOpts, async () => {
+  await assert.rejects(() => d.approve({ candidateId, actorRef: REF }), /déjà promu/i);
+});
