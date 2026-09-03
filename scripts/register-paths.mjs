@@ -42,6 +42,24 @@ const hooksSource = `
       return { url: "data:text/javascript,export{}", shortCircuit: true };
     }
 
+    // Stubs inertes des modules de contexte Next pour exécuter du code serveur
+    // hors requête (tests, scripts). Aucune donnée réelle n'y transite.
+    if (specifier === "next/headers") {
+      const src =
+        "export function cookies(){return{get(){return undefined},getAll(){return[]},set(){},delete(){},has(){return false}}}" +
+        "export function headers(){return new Headers()}" +
+        "export function draftMode(){return{isEnabled:false,enable(){},disable(){}}}";
+      return { url: "data:text/javascript," + encodeURIComponent(src), shortCircuit: true };
+    }
+    if (specifier === "next/navigation") {
+      const src =
+        "export function redirect(u){const e=new Error('NEXT_REDIRECT');e.digest='NEXT_REDIRECT;'+u;throw e}" +
+        "export function permanentRedirect(u){return redirect(u)}" +
+        "export function notFound(){const e=new Error('NEXT_NOT_FOUND');e.digest='NEXT_HTTP_ERROR_FALLBACK;404';throw e}" +
+        "export function forbidden(){const e=new Error('NEXT_FORBIDDEN');e.digest='NEXT_HTTP_ERROR_FALLBACK;403';throw e}";
+      return { url: "data:text/javascript," + encodeURIComponent(src), shortCircuit: true };
+    }
+
     if (specifier.startsWith("@/")) {
       const url = probe(resolvePath(SRC, specifier.slice(2)));
       if (url) return { url, shortCircuit: true };
