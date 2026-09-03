@@ -88,19 +88,18 @@ class OpenAiCompatibleProvider implements AiProvider {
   }
 }
 
+const DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1";
+
 let cached: AiProvider | null = null;
 
 export function getAiProvider(): AiProvider {
   if (cached) return cached;
   const env = getEnv();
-  if (
-    env.AI_PROVIDER === "openai-compatible" &&
-    env.AI_API_KEY &&
-    env.AI_BASE_URL
-  ) {
+  if (env.AI_PROVIDER === "openai-compatible" && env.AI_API_KEY) {
+    const baseUrl = env.AI_BASE_URL || DEFAULT_OPENAI_BASE_URL;
     cached = new OpenAiCompatibleProvider({
       apiKey: env.AI_API_KEY,
-      baseUrl: env.AI_BASE_URL,
+      baseUrl,
       model: env.AI_MODEL,
       timeoutMs: env.AI_TIMEOUT_MS,
       maxTokens: env.AI_MAX_TOKENS,
@@ -112,7 +111,7 @@ export function getAiProvider(): AiProvider {
   // dû à une config `openai-compatible` incomplète.
   if (env.AI_PROVIDER === "openai-compatible") {
     logError("ai.provider.fallbackToMock", {
-      reason: "AI_API_KEY / AI_BASE_URL manquant",
+      reason: "AI_API_KEY manquant",
     });
   }
   cached = new MockAiProvider();

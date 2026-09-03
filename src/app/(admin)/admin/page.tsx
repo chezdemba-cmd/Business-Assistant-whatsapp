@@ -1,6 +1,7 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { listOrganizations, platformMetrics } from "@/server/admin/console-service";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Organisations — Console FEREDRON" };
 
 export default async function AdminOrgsPage() {

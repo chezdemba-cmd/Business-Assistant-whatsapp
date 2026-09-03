@@ -21,6 +21,12 @@ const PROTECTED_PREFIXES = [
   "/conversations",
   "/ai",
   "/language",
+  "/admin",
+  "/automations",
+  "/marketing",
+  "/support",
+  "/billing",
+  "/recommendations",
 ];
 
 export function middleware(request: NextRequest) {
@@ -54,5 +60,11 @@ export const config = {
     "/conversations/:path*",
     "/ai/:path*",
     "/language/:path*",
+    "/admin/:path*",
+    "/automations/:path*",
+    "/marketing/:path*",
+    "/support/:path*",
+    "/billing/:path*",
+    "/recommendations/:path*",
   ],
 };

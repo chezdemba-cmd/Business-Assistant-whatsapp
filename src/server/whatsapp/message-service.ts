@@ -70,6 +70,7 @@ export async function sendAiConversationMessage(input: {
   if (conversation.whatsappConnection.status !== "CONNECTED") {
     throw Conflict("Numéro WhatsApp non connecté.");
   }
+  await assertDemoExternalSendAllowed(input.organizationId, "la réponse automatique IA");
 
   const result = await sendText(
     conversation.whatsappConnection,

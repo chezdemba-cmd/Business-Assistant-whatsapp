@@ -1,8 +1,9 @@
-﻿import {
+import {
   getActivationBreakdown,
   getPlatformUsage,
 } from "@/server/analytics/product-metrics";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Analytics — Console FEREDRON" };
 
 export default async function AdminAnalyticsPage() {

@@ -98,19 +98,18 @@ class OpenAiCompatibleVoiceProvider implements VoiceProvider {
   }
 }
 
+const DEFAULT_OPENAI_VOICE_BASE_URL = "https://api.openai.com/v1";
+
 let cached: VoiceProvider | null = null;
 
 export function getVoiceProvider(): VoiceProvider {
   if (cached) return cached;
   const env = getEnv();
-  if (
-    env.VOICE_PROVIDER === "openai-compatible" &&
-    env.VOICE_API_KEY &&
-    env.VOICE_BASE_URL
-  ) {
+  if (env.VOICE_PROVIDER === "openai-compatible" && env.VOICE_API_KEY) {
+    const baseUrl = env.VOICE_BASE_URL || DEFAULT_OPENAI_VOICE_BASE_URL;
     cached = new OpenAiCompatibleVoiceProvider({
       apiKey: env.VOICE_API_KEY,
-      baseUrl: env.VOICE_BASE_URL,
+      baseUrl,
       model: env.VOICE_MODEL,
       timeoutMs: env.VOICE_TIMEOUT_MS,
     });
@@ -120,7 +119,7 @@ export function getVoiceProvider(): VoiceProvider {
   // VOICE_PROVIDER=mock sans VOICE_ALLOW_MOCK_IN_PROD=1 (§12).
   if (env.VOICE_PROVIDER === "openai-compatible") {
     logError("voice.provider.fallbackToMock", {
-      reason: "VOICE_API_KEY / VOICE_BASE_URL manquant",
+      reason: "VOICE_API_KEY manquant",
     });
   }
   cached = new MockVoiceProvider();

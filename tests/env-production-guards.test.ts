@@ -8,10 +8,15 @@ function env(over: Record<string, unknown> = {}) {
     APP_ENV: "production",
     NODE_ENV: "production",
     AI_PROVIDER: "openai-compatible",
+    AI_API_KEY: "sk-test",
     AI_ALLOW_MOCK_IN_PROD: "0",
     VOICE_PROVIDER: "openai-compatible",
+    VOICE_API_KEY: "sk-test",
     VOICE_ALLOW_MOCK_IN_PROD: "0",
     WHATSAPP_PROVIDER: "meta",
+    WHATSAPP_TOKEN_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef",
+    META_APP_SECRET: "meta_secret",
+    META_WEBHOOK_VERIFY_TOKEN: "verify_token",
     DEPLOYMENT_TOPOLOGY: "single",
     RATE_LIMIT_STORE: "memory",
     REDIS_URL: undefined,
@@ -25,6 +30,34 @@ function env(over: Record<string, unknown> = {}) {
 
 test("prod OK : aucun garde-fou déclenché", () => {
   assert.deepEqual(productionGuardIssues(env()), []);
+});
+
+test("AI_PROVIDER=openai-compatible sans AI_API_KEY → bloqué", () => {
+  assert.match(
+    productionGuardIssues(env({ AI_API_KEY: undefined }))[0]!,
+    /AI_API_KEY/,
+  );
+});
+
+test("VOICE_PROVIDER=openai-compatible sans VOICE_API_KEY → bloqué", () => {
+  assert.match(
+    productionGuardIssues(env({ VOICE_API_KEY: undefined }))[0]!,
+    /VOICE_API_KEY/,
+  );
+});
+
+test("WHATSAPP_PROVIDER=meta sans clés de prod → bloqué", () => {
+  const issues = productionGuardIssues(
+    env({
+      WHATSAPP_TOKEN_ENCRYPTION_KEY: undefined,
+      META_APP_SECRET: undefined,
+      META_WEBHOOK_VERIFY_TOKEN: undefined,
+    }),
+  );
+  assert.equal(issues.length, 3);
+  assert.match(issues[0]!, /WHATSAPP_TOKEN_ENCRYPTION_KEY/);
+  assert.match(issues[1]!, /META_APP_SECRET/);
+  assert.match(issues[2]!, /META_WEBHOOK_VERIFY_TOKEN/);
 });
 
 test("§12 : AI_PROVIDER=mock en prod sans autorisation → bloqué", () => {

@@ -202,15 +202,32 @@ export function productionGuardIssues(env: Env): string[] {
       "AI_PROVIDER=mock interdit en production (définir un vrai provider ou AI_ALLOW_MOCK_IN_PROD=1).",
     );
   }
+  if (env.AI_PROVIDER === "openai-compatible" && !env.AI_API_KEY) {
+    issues.push("AI_PROVIDER=openai-compatible exige AI_API_KEY.");
+  }
   if (env.VOICE_PROVIDER === "mock" && env.VOICE_ALLOW_MOCK_IN_PROD !== "1") {
     issues.push(
       "VOICE_PROVIDER=mock interdit en production (définir un vrai provider ou VOICE_ALLOW_MOCK_IN_PROD=1).",
     );
   }
+  if (env.VOICE_PROVIDER === "openai-compatible" && !env.VOICE_API_KEY) {
+    issues.push("VOICE_PROVIDER=openai-compatible exige VOICE_API_KEY.");
+  }
   if (env.WHATSAPP_PROVIDER === "mock" && process.env.WHATSAPP_ALLOW_MOCK_IN_PROD !== "1") {
     issues.push(
       "WHATSAPP_PROVIDER=mock interdit en production (WHATSAPP_PROVIDER=meta ou WHATSAPP_ALLOW_MOCK_IN_PROD=1).",
     );
+  }
+  if (env.WHATSAPP_PROVIDER === "meta") {
+    if (!env.WHATSAPP_TOKEN_ENCRYPTION_KEY) {
+      issues.push("WHATSAPP_PROVIDER=meta exige WHATSAPP_TOKEN_ENCRYPTION_KEY.");
+    }
+    if (!env.META_APP_SECRET) {
+      issues.push("WHATSAPP_PROVIDER=meta exige META_APP_SECRET.");
+    }
+    if (!env.META_WEBHOOK_VERIFY_TOKEN) {
+      issues.push("WHATSAPP_PROVIDER=meta exige META_WEBHOOK_VERIFY_TOKEN.");
+    }
   }
   if (env.RATE_LIMIT_STORE === "redis") {
     // L'adaptateur Redis n'est pas encore implémenté (cf. server/ratelimit/store.ts) :

@@ -67,3 +67,7 @@ prisma/*.db-journal
 /feredron-*.png
 /feredron-*.xml
 /analytics.settings
+*.apk
+public/*.apk
+/chrome_screen.png
+/phone_screen.png
