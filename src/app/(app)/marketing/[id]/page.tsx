@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
@@ -9,7 +9,7 @@ import { isAppError } from "@/server/errors";
 import { formatDateTime } from "@/lib/format";
 import { CampaignActions } from "@/components/marketing/CampaignActions";
 
-export const metadata = { title: "Campagne — Djeli" };
+export const metadata = { title: "Campagne — FEREDRON" };
 
 const ITEM_LABEL: Record<string, string> = {
   PENDING: "En attente",

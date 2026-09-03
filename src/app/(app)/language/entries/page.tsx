@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { LanguageCode, LanguageEntryStatus, LanguageScope } from "@prisma/client";
 import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
@@ -7,7 +7,7 @@ import { Card, PageHeader, Badge } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { CreateEntryForm } from "@/components/language/EntryForms";
 
-export const metadata = { title: "Entrées linguistiques — Djeli" };
+export const metadata = { title: "Entrées linguistiques — FEREDRON" };
 
 export default async function LanguageEntriesPage({
   searchParams,
@@ -17,7 +17,7 @@ export default async function LanguageEntriesPage({
   const sp = await searchParams;
   const ctx = await pageOrgContext();
   if (!can(ctx.role, "language.admin")) {
-    return <ForbiddenPanel role={ctx.role} requiredFor="Djeli Language Core" />;
+    return <ForbiddenPanel role={ctx.role} requiredFor="FEREDRON Language Core" />;
   }
 
   const [entries, domains] = await Promise.all([

@@ -1,11 +1,11 @@
-import { requireUser } from "@/server/auth/current-user";
+﻿import { requireUser } from "@/server/auth/current-user";
 import { requireOrgContext } from "@/server/tenant/context";
 import { requirePermission } from "@/server/rbac/guard";
 import { Card } from "@/components/ui";
 import { InviteMemberForm } from "@/components/InviteMemberForm";
 import { FinishOnboarding } from "./FinishOnboarding";
 
-export const metadata = { title: "Inviter votre équipe — Djeli" };
+export const metadata = { title: "Inviter votre équipe — FEREDRON" };
 
 export default async function OnboardingTeamPage() {
   const user = await requireUser();

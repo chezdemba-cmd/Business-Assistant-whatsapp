@@ -1,34 +1,33 @@
-/* Djeli's Business Assistant — styles de base.
-   Tokens repris de la maquette `Djeli Business Assistant vb.html`. Pas de redesign. */
+/* FEREDRON — identité commerciale : confiance, croissance et action. */
 
 :root {
-  --bg: #f5ead8;
-  --panel: #ebddc5;
-  --card: #f9f4ed;
-  --card-alt: #eee7db;
-  --border: #dcd3c4;
-  --border-soft: #eee7db;
+  --bg: #f4f8f5;
+  --panel: #e7f0ea;
+  --card: #ffffff;
+  --card-alt: #edf5ef;
+  --border: #d4e2d8;
+  --border-soft: #e5eee8;
 
-  --text: #201e1d;
-  --text-2: #645c50;
-  --text-3: #82796a;
-  --text-muted: #a19786;
+  --text: #03172d;
+  --text-2: #34495e;
+  --text-3: #60756a;
+  --text-muted: #82948a;
 
-  --accent: #c67139;
-  --accent-hover: #b2622d;
-  --accent-active: #8c491a;
-  --on-accent: #fff2eb;
+  --accent: #078c38;
+  --accent-hover: #067632;
+  --accent-active: #045c28;
+  --on-accent: #ffffff;
 
-  --ok-bg: #f0fae1;
-  --ok-fg: #56633f;
-  --green: #7a8a5e;
+  --ok-bg: #e9f8ee;
+  --ok-fg: #075f2b;
+  --green: #078c38;
 
-  --warn-bg: #fff2eb;
-  --warn-border: #f0c9ae;
-  --warn-fg: #8c491a;
+  --warn-bg: #fff7db;
+  --warn-border: #f3d66c;
+  --warn-fg: #6f5200;
 
-  --ink: #201e1d;
-  --ink-2: #474238;
+  --ink: #03172d;
+  --ink-2: #173650;
 
   --font-display: "Caprasimo", Georgia, serif;
   --font-sans: "Figtree", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -387,6 +386,9 @@ textarea::placeholder {
   top: 0;
   z-index: 5;
 }
+.app-mobile-brand {
+  display: none;
+}
 .app-profile-chip {
   display: flex;
   align-items: center;
@@ -403,53 +405,635 @@ textarea::placeholder {
     grid-template-columns: 1fr;
   }
   .app-sidebar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    border-right: 0;
-    border-bottom: 1px solid var(--border);
-    gap: 6px;
-    padding: 12px;
-  }
-  .app-sidebar .app-nav-section,
-  .app-sidebar .app-sidebar-footer {
     display: none;
   }
   .app-topbar {
-    padding: 12px 18px;
-    flex-wrap: wrap;
+    min-height: 58px;
+    padding: calc(8px + env(safe-area-inset-top)) 16px 8px;
+    flex-wrap: nowrap;
+    background: var(--card);
+  }
+  .app-mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-1);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-size: 16px;
+    letter-spacing: .02em;
+  }
+  .app-mobile-brand img {
+    object-fit: contain;
+  }
+  .app-search-placeholder,
+  .app-topbar-secondary {
+    display: none !important;
+  }
+  .app-topbar-actions {
+    margin-left: auto !important;
+    gap: 0 !important;
+  }
+  .app-profile-chip {
+    padding: 3px;
+    border: 0;
+    background: transparent;
+  }
+  .app-profile-chip > div:last-child {
+    display: none;
   }
 }
 
-/* ---- smartphone (largeur cible 375 px, §26) ---- */
+/* ═══════════════ Phase 9 — mobile-first ═══════════════ */
+
+/* Safe-area (encoches iOS) sur toute l'app */
+.app-shell {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ---- Bottom navigation mobile (§4, §5) ---- */
+.mobile-nav {
+  display: none;
+}
+@media (max-width: 900px) {
+  .mobile-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    align-items: stretch;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+  }
+  .mobile-nav__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 58px;
+    padding: 8px 4px 6px;
+    text-decoration: none;
+    color: var(--text-3);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .mobile-nav__item[data-active="true"] {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .mobile-nav__icon {
+    font-size: 20px;
+    line-height: 1;
+  }
+  .mobile-nav__item--primary {
+    color: var(--on-accent);
+  }
+  .mobile-nav__item--primary .mobile-nav__icon {
+    background: var(--accent);
+    color: var(--on-accent);
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -18px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  }
+  .mobile-nav__item--primary .mobile-nav__label {
+    color: var(--accent);
+  }
+  /* place pour la barre + zone tactile confortable */
+  .app-main .dj-page {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom) + 20px);
+  }
+  /* la barre de recherche factice du topbar n'apporte rien sur mobile */
+  .app-topbar > div:first-child {
+    display: none;
+  }
+}
+
+/* ---- smartphone (cibles 360 / 375 / 390 / 430 px — §3) ---- */
+.customers-mobile-list {
+  display: none;
+}
+
+.catalog-category-manager {
+  margin-top: 20px;
+}
+
+.catalog-category-manager > summary {
+  padding: 14px 4px;
+  color: var(--text-2);
+  font-weight: 800;
+  cursor: pointer;
+}
+
 @media (max-width: 640px) {
+  .catalog-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+  }
+
+  .catalog-actions .dj-btn {
+    min-width: 0;
+    padding-inline: 10px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  form.catalog-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  form.catalog-filters > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  form.catalog-filters > select {
+    min-width: 0;
+    padding-right: 34px;
+    font-size: 16px;
+  }
+
+  .product-card > :first-child {
+    height: 160px !important;
+  }
+
+  .product-card-name {
+    font-family: var(--font-sans) !important;
+    font-size: 18px !important;
+    font-weight: 800;
+  }
+
+  .catalog-category-manager {
+    margin-bottom: 18px;
+  }
+
+  form.customers-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  form.customers-filters > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  form.customers-filters > :last-child:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+
+  form.customers-filters > select {
+    min-width: 0;
+    padding-right: 34px;
+    font-size: 16px;
+  }
+
+  .customers-desktop-table {
+    display: none;
+  }
+
+  .customers-mobile-list {
+    display: grid;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .customer-mobile-card {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .customer-mobile-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .customer-mobile-heading div {
+    min-width: 0;
+  }
+
+  .customer-mobile-heading strong,
+  .customer-mobile-heading span {
+    display: block;
+  }
+
+  .customer-mobile-heading strong {
+    overflow-wrap: anywhere;
+    font-size: 18px;
+  }
+
+  .customer-mobile-heading div > span {
+    margin-top: 3px;
+    color: var(--text-2);
+    font-size: 14px;
+  }
+
+  .customer-mobile-heading > span {
+    color: var(--text-3);
+    font-size: 26px;
+  }
+
+  .customer-mobile-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    color: var(--text-2);
+    font-size: 13px;
+  }
+
+  .customer-mobile-tags > span:not(.dj-badge) {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: var(--panel);
+  }
+
+  .customer-mobile-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-soft);
+    color: var(--text-2);
+    font-size: 12px;
+  }
+
+  .customer-mobile-stats strong {
+    display: block;
+    color: var(--text);
+    font-size: 15px;
+  }
+
+  .mobile-menu-groups {
+    display: grid;
+    gap: 20px;
+  }
+
+  .mobile-menu-title {
+    margin: 0 0 8px 4px;
+    color: var(--text-2);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .mobile-menu-card {
+    overflow: hidden;
+  }
+
+  .mobile-menu-link {
+    display: grid;
+    grid-template-columns: 34px 1fr auto;
+    min-height: 58px;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    color: inherit;
+    font-size: 17px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .mobile-menu-link:last-child {
+    border-bottom: 0;
+  }
+
+  .mobile-menu-icon {
+    font-size: 21px;
+    text-align: center;
+  }
+
+  .mobile-menu-arrow {
+    color: var(--text-3);
+    font-size: 25px;
+  }
+
+  form.orders-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  form.orders-filters > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  form.orders-filters > select {
+    min-width: 0;
+    padding-right: 34px;
+    font-size: 16px;
+  }
+
+  .orders-date-filter {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 4px 14px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--card);
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .orders-date-filter > span {
+    white-space: nowrap;
+  }
+
+  .orders-date-filter .dj-input {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .dj-h1,
+  .dj-btn {
+    font-family: var(--font-sans);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .app-demo-banner {
+    padding: 4px 10px !important;
+    font-size: 9px !important;
+    line-height: 1.25;
+  }
+  .feredron-briefing-title {
+    font-size: 22px !important;
+    line-height: 1.15;
+  }
+  .assistant-suggestions,
+  .assistant-opportunities {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    margin-left: -16px;
+    margin-right: -16px;
+    padding: 2px 16px 8px;
+    scrollbar-width: none;
+  }
+  .assistant-suggestions::-webkit-scrollbar,
+  .assistant-opportunities::-webkit-scrollbar {
+    display: none;
+  }
+  .assistant-suggestions > *,
+  .assistant-opportunities > * {
+    flex: none;
+    max-width: 78vw;
+    white-space: normal;
+    text-align: left;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .assistant-composer {
+    display: grid !important;
+    grid-template-columns: 52px 1fr;
+    gap: 8px !important;
+  }
+  .assistant-composer .dj-input {
+    grid-column: 1 / -1;
+    min-width: 0 !important;
+  }
+  .assistant-composer .dj-btn {
+    width: 100%;
+  }
+  .assistant-composer .mic-button-wrap {
+    width: 52px;
+    min-width: 52px;
+  }
+  .assistant-composer .mic-button-wrap > div,
+  .assistant-composer .mic-button-wrap .dj-btn {
+    width: 52px;
+    min-width: 52px !important;
+    padding: 0 !important;
+  }
+  .assistant-composer .mic-button-hint {
+    display: none;
+  }
+  .assistant-composer .mic-button-wrap--recording {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .assistant-composer .mic-button-wrap--recording > div {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .assistant-proposal-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+  }
+  .assistant-proposal-actions form,
+  .assistant-proposal-actions .dj-btn {
+    width: 100%;
+  }
+  div.quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .quick-actions .dj-card {
+    min-height: 76px !important;
+    padding: 12px 8px !important;
+  }
+  div.orders-kanban {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(82vw, 1fr)) !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    margin-right: -14px;
+    padding-right: 14px !important;
+    scrollbar-width: none;
+  }
+  .orders-kanban::-webkit-scrollbar {
+    display: none;
+  }
+  .orders-kanban > * {
+    scroll-snap-align: start;
+  }
+  .auth-grid {
+    min-height: 100dvh;
+    align-content: start;
+    background: var(--bg);
+  }
+  .auth-aside {
+    padding: calc(18px + env(safe-area-inset-top)) 20px 14px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  .auth-aside > div:not(:first-child) {
+    display: none;
+  }
+  .auth-aside > div:first-child img {
+    width: 40px;
+    height: 40px;
+  }
+  .auth-aside > div:first-child > div > div:first-child {
+    font-size: 18px !important;
+  }
+  .auth-main {
+    padding: 28px 20px 90px;
+    align-items: flex-start;
+  }
+  .auth-switch {
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    justify-content: center;
+    border: 1px solid var(--border);
+    background: var(--card);
+  }
   .dj-page {
-    padding: 16px 12px 32px;
+    padding: 18px 14px 32px;
   }
   .dj-h1 {
     font-size: 24px;
   }
-  .app-nav-link {
-    font-size: 13px;
-    padding: 8px 10px;
-  }
   .app-topbar {
-    padding: 10px 12px;
+    padding-left: 14px;
+    padding-right: 14px;
     gap: 10px;
+  }
+  .dj-card {
+    border-radius: 16px;
+    padding: 16px !important;
+  }
+  .dj-stack {
+    gap: 12px;
+  }
+  .dj-page > div:first-child {
+    align-items: flex-start !important;
+    gap: 12px !important;
+    margin-bottom: 18px !important;
+  }
+  .dj-page > div:first-child > div,
+  .dj-page > div:first-child > div:last-child {
+    width: 100%;
+  }
+  .dj-page > div:first-child .dj-btn {
+    width: 100%;
+  }
+  .dj-page p {
+    overflow-wrap: anywhere;
   }
   .auth-switch {
     right: 12px;
     bottom: 12px;
   }
-  /* Toute table large défile dans son conteneur plutôt que de casser la page. */
-  table {
+
+  /* Cibles tactiles ≥ 44 px + pas de zoom iOS sur focus (§10, §11, §59) */
+  .dj-btn {
+    min-height: 44px;
+  }
+  .dj-input,
+  select.dj-input,
+  textarea.dj-input {
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .app-nav-link {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  /* Tables non converties : défilement horizontal interne (dernier recours, §8) */
+  table:not(.dj-cards-sm) {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
   }
-  /* Grilles à colonnes fixes → une seule colonne. */
+
+  /* Tables converties en cartes (§7, §8) : opt-in via .dj-cards-sm */
+  table.dj-cards-sm,
+  table.dj-cards-sm tbody,
+  table.dj-cards-sm tr,
+  table.dj-cards-sm td {
+    display: block;
+    width: 100%;
+  }
+  table.dj-cards-sm thead {
+    display: none;
+  }
+  table.dj-cards-sm tr {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    background: var(--card);
+  }
+  table.dj-cards-sm td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 6px 0;
+    border: 0 !important;
+    font-size: 14px;
+    text-align: right;
+  }
+  table.dj-cards-sm td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--text-3);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: left;
+    flex: none;
+  }
+  table.dj-cards-sm td[data-label=""]::before {
+    content: none;
+  }
+  table.dj-cards-sm td:first-child {
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  /* Grilles à colonnes fixes → une seule colonne */
   [style*="gridTemplateColumns"],
   [style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;
   }
+
+  /* Les rangées de formulaires et d'actions deviennent verticales. */
+  form[style*="display: flex"],
+  [style*="display: flex"][style*="flex-wrap: wrap"] {
+    align-items: stretch !important;
+  }
+  form[style*="display: flex"] > .dj-input {
+    flex-basis: 100% !important;
+    width: 100% !important;
+  }
 }
 
+@media (max-width: 380px) {
+  .dj-page {
+    padding: 14px 10px 32px;
+  }
+  .dj-h1 {
+    font-size: 22px;
+  }
+}

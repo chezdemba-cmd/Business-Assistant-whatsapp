@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Caprasimo, Figtree } from "next/font/google";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
 const display = Caprasimo({
@@ -17,9 +18,29 @@ const sans = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "Djeli's Business Assistant",
-  description:
-    "Copilote commercial WhatsApp + IA pour commerçants, grossistes et distributeurs.",
+  title: `${BRAND.name} — ${BRAND.tagline}`,
+  description: BRAND.description,
+  applicationName: BRAND.name,
+  appleWebApp: {
+    capable: true,
+    title: BRAND.name,
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: BRAND.colors.green,
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  maximumScale: 5,
 };
 
 export default function RootLayout({

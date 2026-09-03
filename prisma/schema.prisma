@@ -286,6 +286,7 @@ enum OrderDraftStatus {
 enum AiActionType {
   CREATE_ORDER_FROM_DRAFT
   PREPARE_REMINDER
+  PREPARE_SALES_CAMPAIGN
 }
 
 enum AiActionProposalStatus {

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { ConversationMode, ConversationStatus, Prisma } from "@prisma/client";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -15,7 +15,7 @@ import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { Pager } from "@/components/Pager";
 import { ConversationFilters } from "@/components/whatsapp/ConversationFilters";
 
-export const metadata = { title: "Conversations — Djeli" };
+export const metadata = { title: "Conversations — FEREDRON" };
 
 const PER_PAGE = 25;
 

@@ -22,9 +22,10 @@ let store: RateLimitStore | null = null;
 export function getRateLimitStore(): RateLimitStore {
   if (store) return store;
   if (getEnv().RATE_LIMIT_STORE === "redis") {
-    logger.warn("ratelimit.redis.notInstalled", {
+    logger.error("ratelimit.redis.notInstalled", {
       service: "ratelimit",
       event: "fallback_to_memory",
+      impact: "rate-limit NON partagé entre instances — protection par instance seulement",
     });
   }
   store = new MemoryRateLimitStore();

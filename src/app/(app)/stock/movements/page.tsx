@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { Prisma, StockMovementType } from "@prisma/client";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -14,7 +14,7 @@ import { Pager } from "@/components/Pager";
 import { ReverseMovementButton } from "@/components/stock/ReverseMovementButton";
 import { MovementFilters } from "./MovementFilters";
 
-export const metadata = { title: "Mouvements de stock — Djeli" };
+export const metadata = { title: "Mouvements de stock — FEREDRON" };
 
 const PER_PAGE = 25;
 

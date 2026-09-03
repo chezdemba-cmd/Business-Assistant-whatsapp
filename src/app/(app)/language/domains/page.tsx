@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
 import { lcDb } from "@/language-core/db";
@@ -6,12 +6,12 @@ import { Card, PageHeader, Badge } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { CreateDomainForm } from "@/components/language/EntryForms";
 
-export const metadata = { title: "Domaines linguistiques — Djeli" };
+export const metadata = { title: "Domaines linguistiques — FEREDRON" };
 
 export default async function LanguageDomainsPage() {
   const ctx = await pageOrgContext();
   if (!can(ctx.role, "language.admin")) {
-    return <ForbiddenPanel role={ctx.role} requiredFor="Djeli Language Core" />;
+    return <ForbiddenPanel role={ctx.role} requiredFor="FEREDRON Language Core" />;
   }
   const domains = await lcDb.languageDomain.findMany({ orderBy: { code: "asc" } });
 

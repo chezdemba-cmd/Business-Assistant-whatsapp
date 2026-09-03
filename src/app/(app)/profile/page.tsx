@@ -1,4 +1,4 @@
-import { requireUser } from "@/server/auth/current-user";
+﻿import { requireUser } from "@/server/auth/current-user";
 import { getOrgContext } from "@/server/tenant/context";
 import { Card, PageHeader, RoleBadge } from "@/components/ui";
 import {
@@ -7,7 +7,7 @@ import {
   RevokeSessionsForm,
 } from "@/components/profile/ProfileForms";
 
-export const metadata = { title: "Mon profil — Djeli" };
+export const metadata = { title: "Mon profil — FEREDRON" };
 
 export default async function ProfilePage() {
   const user = await requireUser();

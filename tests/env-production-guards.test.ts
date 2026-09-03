@@ -40,8 +40,13 @@ test("§54 : ALLOW_DEMO_SEED=1 en prod → bloqué", () => {
   assert.match(productionGuardIssues(env({ ALLOW_DEMO_SEED: "1" }))[0]!, /seed/i);
 });
 
-test("RATE_LIMIT_STORE=redis sans REDIS_URL → bloqué", () => {
-  assert.match(productionGuardIssues(env({ RATE_LIMIT_STORE: "redis" }))[0]!, /REDIS_URL/);
+test("RATE_LIMIT_STORE=redis en prod → bloqué (adaptateur non implémenté)", () => {
+  assert.match(productionGuardIssues(env({ RATE_LIMIT_STORE: "redis" }))[0]!, /redis/i);
+  // Même avec REDIS_URL : toujours bloqué tant que l'adaptateur n'existe pas.
+  assert.equal(
+    productionGuardIssues(env({ RATE_LIMIT_STORE: "redis", REDIS_URL: "redis://x:6379" })).length,
+    1,
+  );
 });
 
 test("hors production : aucun garde-fou", () => {

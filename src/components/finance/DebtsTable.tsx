@@ -103,7 +103,7 @@ export function DebtsTable({
 
       <div className="dj-card" style={{ padding: 0, overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+          <table className="dj-cards-sm" style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
             <thead>
               <tr style={{ background: "var(--panel)" }}>
                 {canWrite ? (
@@ -129,7 +129,7 @@ export function DebtsTable({
               {rows.map((r) => (
                 <tr key={r.orderId} style={{ borderTop: "1px solid var(--border-soft)" }}>
                   {canWrite ? (
-                    <td style={{ padding: "13px 16px" }}>
+                    <td data-label="" style={{ padding: "13px 16px" }}>
                       <input
                         type="checkbox"
                         checked={selected.has(r.orderId)}
@@ -138,39 +138,40 @@ export function DebtsTable({
                       />
                     </td>
                   ) : null}
-                  <td style={{ padding: "13px 16px" }}>
+                  <td data-label="Client" style={{ padding: "13px 16px" }}>
                     <Link href={`/customers/${r.customerId}`} style={{ fontWeight: 700 }}>
                       {r.customerName}
                     </Link>
                   </td>
-                  <td style={{ padding: "13px 16px" }}>
+                  <td data-label="Commande" style={{ padding: "13px 16px" }}>
                     <Link href={`/orders/${r.orderId}`} className="mono">
                       {r.reference}
                     </Link>
                   </td>
-                  <td className="tnum" style={{ padding: "13px 16px" }}>
+                  <td data-label="Montant" className="tnum" style={{ padding: "13px 16px" }}>
                     {formatAmount(r.totalAmount, r.currency)}
                   </td>
-                  <td className="tnum" style={{ padding: "13px 16px", color: "var(--text-2)" }}>
+                  <td data-label="Payé" className="tnum" style={{ padding: "13px 16px", color: "var(--text-2)" }}>
                     {formatAmount(r.amountPaid, r.currency)}
                   </td>
                   <td
+                    data-label="Solde"
                     className="tnum"
                     style={{ padding: "13px 16px", fontWeight: 700 }}
                   >
                     {formatAmount(r.balanceDue, r.currency)}
                   </td>
-                  <td style={{ padding: "13px 16px", color: "var(--text-3)", fontSize: 13 }}>
+                  <td data-label="Échéance" style={{ padding: "13px 16px", color: "var(--text-3)", fontSize: 13 }}>
                     {r.dueDate ? formatDate(r.dueDate) : "—"}
                   </td>
-                  <td style={{ padding: "13px 16px" }}>
+                  <td data-label="Retard" style={{ padding: "13px 16px" }}>
                     {r.isOverdue ? (
                       <Badge variant="accent">{r.daysOverdue} j</Badge>
                     ) : (
                       <span style={{ fontSize: 13, color: "var(--text-3)" }}>—</span>
                     )}
                   </td>
-                  <td style={{ padding: "13px 16px" }}>
+                  <td data-label="Tranche" style={{ padding: "13px 16px" }}>
                     <Badge variant={r.bucket === "NOT_DUE" ? "ok" : "default"}>
                       {AGING_BUCKET_LABEL[r.bucket]}
                     </Badge>

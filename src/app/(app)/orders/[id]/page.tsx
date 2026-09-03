@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -22,7 +22,7 @@ import { CancelPaymentButton } from "@/components/finance/CancelPaymentButton";
 import { DueDateForm } from "@/components/finance/DueDateForm";
 import { PrepareReminderButton } from "@/components/finance/PrepareReminderButton";
 
-export const metadata = { title: "Commande — Djeli" };
+export const metadata = { title: "Commande — FEREDRON" };
 
 export default async function OrderDetailPage({
   params,

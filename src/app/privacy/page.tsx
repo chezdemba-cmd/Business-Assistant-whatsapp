@@ -1,12 +1,12 @@
-import { LegalShell } from "../legal/LegalShell";
+﻿import { LegalShell } from "../legal/LegalShell";
 
-export const metadata = { title: "Confidentialité — Djeli" };
+export const metadata = { title: "Confidentialité — FEREDRON" };
 
 export default function PrivacyPage() {
   return (
     <LegalShell title="Politique de confidentialité">
       <p>
-        Djeli traite les données que le commerçant saisit ou reçoit via WhatsApp
+        FEREDRON traite les données que le commerçant saisit ou reçoit via WhatsApp
         pour rendre le service : clients, produits, stock, commandes, créances,
         paiements, conversations et transcriptions vocales.
       </p>
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
         propriétaire peut exporter ses données et demander la suppression de
         l&apos;organisation (période de grâce de 14 jours avant purge).
       </p>
-      <h2>Djeli Language Core</h2>
+      <h2>FEREDRON Language Core</h2>
       <p>
         Les corrections linguistiques privées ne deviennent jamais une
         connaissance partagée sans anonymisation et validation humaine. Aucun

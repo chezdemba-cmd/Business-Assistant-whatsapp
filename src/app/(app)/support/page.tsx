@@ -1,10 +1,10 @@
-import { pageOrgContext } from "@/server/page-context";
+﻿import { pageOrgContext } from "@/server/page-context";
 import { PageHeader, Card } from "@/components/ui";
 import { listSupportTickets } from "@/server/support/support-service";
 import { SupportTicketForm } from "@/components/support/SupportForms";
 import { formatDateTime } from "@/lib/format";
 
-export const metadata = { title: "Support — Djeli" };
+export const metadata = { title: "Support — FEREDRON" };
 
 const STATUS_LABEL: Record<string, string> = {
   OPEN: "Ouvert",

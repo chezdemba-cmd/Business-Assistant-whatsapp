@@ -123,6 +123,8 @@ const schema = z.object({
   DJELI_SUPERADMIN_EMAILS: z.string().optional(),
   /** Tentatives de connexion autorisées par IP et par minute. */
   LOGIN_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().max(120).default(10),
+  /** Créations de compte autorisées par IP et par minute (anti-abus / anti-énumération). */
+  REGISTER_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().max(60).default(5),
 
   // ── Staging / démo (seed-staging.ts) — jamais actif en production ──
   /** Mots de passe des comptes de test DEMO. Fallback dev documenté si absents. */
@@ -133,6 +135,23 @@ const schema = z.object({
   DEMO_EMPLOYEE_PASSWORD: z.string().min(1).optional(),
   /** Autorise une organisation `isDemo` à déclencher un envoi externe réel. Défaut : NON. */
   DEMO_ALLOW_EXTERNAL_SEND: z.enum(["true", "false"]).default("false"),
+
+  // ── Phase 9 : mobile / PWA / natif ──
+  /** Feature flags mobile (inlinés au build ; lus aussi côté client). */
+  NEXT_PUBLIC_PWA_ENABLED: z.string().optional(),
+  NEXT_PUBLIC_MOBILE_NATIVE: z.string().optional(),
+  NEXT_PUBLIC_PUSH_NOTIFICATIONS: z.string().optional(),
+  /** Identité de l'app native (§45). */
+  MOBILE_APP_ID: z.string().min(3).default("com.djeli.business"),
+  APP_VERSION: z.string().default("0.9.0"),
+  BUILD_NUMBER: z.coerce.number().int().nonnegative().default(1),
+  /** URLs que le shell natif peut charger (§91). Pas de localhost en dur. */
+  STAGING_API_URL: z.string().url().optional(),
+  PRODUCTION_API_URL: z.string().url().optional(),
+  /** URL forcée pour le build Capacitor courant (sinon PRODUCTION_API_URL puis STAGING_API_URL). */
+  CAP_SERVER_URL: z.string().url().optional(),
+  /** Clé publique VAPID pour le Web Push (§33). */
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -173,8 +192,14 @@ export function productionGuardIssues(env: Env): string[] {
       "WHATSAPP_PROVIDER=mock interdit en production (WHATSAPP_PROVIDER=meta ou WHATSAPP_ALLOW_MOCK_IN_PROD=1).",
     );
   }
-  if (env.RATE_LIMIT_STORE === "redis" && !env.REDIS_URL) {
-    issues.push("RATE_LIMIT_STORE=redis exige REDIS_URL.");
+  if (env.RATE_LIMIT_STORE === "redis") {
+    // L'adaptateur Redis n'est pas encore implémenté (cf. server/ratelimit/store.ts) :
+    // en production, retomber silencieusement sur la mémoire donnerait une fausse
+    // impression de rate-limit partagé multi-instance.
+    issues.push(
+      "RATE_LIMIT_STORE=redis : adaptateur Redis non implémenté (retombée mémoire silencieuse). " +
+        "Utiliser 'memory' (déploiement mono-instance) ou fournir l'implémentation Redis.",
+    );
   }
   if (env.ALLOW_DEMO_SEED === "1") {
     issues.push("ALLOW_DEMO_SEED=1 en production : le seed de démonstration ne doit jamais tourner en prod.");

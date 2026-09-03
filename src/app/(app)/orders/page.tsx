@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { OrderPaymentStatus, OrderSource, OrderStatus, Prisma } from "@prisma/client";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -15,7 +15,7 @@ import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { Pager } from "@/components/Pager";
 import { OrdersFilters } from "@/components/orders/OrdersFilters";
 
-export const metadata = { title: "Commandes — Djeli" };
+export const metadata = { title: "Commandes — FEREDRON" };
 
 const KANBAN_COLUMNS: OrderStatus[] = [
   "NEW",
@@ -104,6 +104,7 @@ export default async function OrdersPage({
           />
         ) : (
           <div
+            className="orders-kanban"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(5, minmax(220px, 1fr))",
@@ -257,7 +258,7 @@ export default async function OrdersPage({
         <>
           <Card style={{ padding: 0, overflow: "hidden" }}>
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+              <table className="dj-cards-sm" style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
                 <thead>
                   <tr style={{ background: "var(--panel)" }}>
                     {["Réf.", "Client", "Articles", "Statut", "Paiement", "Source", "Total", "Date"].map(
@@ -283,30 +284,30 @@ export default async function OrdersPage({
                 <tbody>
                   {orders.map((o) => (
                     <tr key={o.id} style={{ borderTop: "1px solid var(--border-soft)" }}>
-                      <td style={{ padding: "13px 16px" }}>
+                      <td data-label="Réf." style={{ padding: "13px 16px" }}>
                         <Link href={`/orders/${o.id}`} className="mono" style={{ fontWeight: 700 }}>
                           {o.reference}
                         </Link>
                       </td>
-                      <td style={{ padding: "13px 16px" }}>
+                      <td data-label="Client" style={{ padding: "13px 16px" }}>
                         <Link href={`/customers/${o.customer.id}`}>{o.customer.displayName}</Link>
                       </td>
-                      <td className="tnum" style={{ padding: "13px 16px" }}>{o._count.items}</td>
-                      <td style={{ padding: "13px 16px" }}>
+                      <td data-label="Articles" className="tnum" style={{ padding: "13px 16px" }}>{o._count.items}</td>
+                      <td data-label="Statut" style={{ padding: "13px 16px" }}>
                         <Badge>{ORDER_STATUS_LABEL[o.status]}</Badge>
                       </td>
-                      <td style={{ padding: "13px 16px" }}>
+                      <td data-label="Paiement" style={{ padding: "13px 16px" }}>
                         <Badge variant={o.paymentStatus === "PAID" ? "ok" : "accent"}>
                           {PAYMENT_STATUS_LABEL[o.paymentStatus]}
                         </Badge>
                       </td>
-                      <td style={{ padding: "13px 16px", color: "var(--text-2)" }}>
+                      <td data-label="Source" style={{ padding: "13px 16px", color: "var(--text-2)" }}>
                         {ORDER_SOURCE_LABEL[o.source]}
                       </td>
-                      <td className="tnum" style={{ padding: "13px 16px", fontWeight: 700 }}>
+                      <td data-label="Total" className="tnum" style={{ padding: "13px 16px", fontWeight: 700 }}>
                         {formatAmount(o.totalAmount, currency)}
                       </td>
-                      <td style={{ padding: "13px 16px", color: "var(--text-3)", fontSize: 13 }}>
+                      <td data-label="Date" style={{ padding: "13px 16px", color: "var(--text-3)", fontSize: 13 }}>
                         {formatDate(o.createdAt)}
                       </td>
                     </tr>

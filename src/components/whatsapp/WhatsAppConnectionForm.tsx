@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -177,7 +177,7 @@ export function WhatsAppConnectionForm({
               <Input id="wa-disp" name="displayPhoneNumber" placeholder="+223 76 00 00 00" />
             </Field>
             <Field label="Nom vérifié (facultatif)" htmlFor="wa-name">
-              <Input id="wa-name" name="verifiedName" placeholder="Djeli Commerce" />
+              <Input id="wa-name" name="verifiedName" placeholder="FEREDRON Commerce" />
             </Field>
           </div>
 

@@ -26,6 +26,18 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), geolocation=(), microphone=(self), payment=()" },
   { key: "X-DNS-Prefetch-Control", value: "off" },
+  // HSTS — forcé hors dev uniquement (inutile sur http://localhost). Les
+  // navigateurs ignorent l'en-tête servi en clair, donc sans risque derrière un
+  // proxy qui redirige encore http→https. `preload` volontairement omis
+  // (engagement irréversible : à activer sciemment le moment venu).
+  ...(process.env.NODE_ENV === "development"
+    ? []
+    : [
+        {
+          key: "Strict-Transport-Security",
+          value: "max-age=63072000; includeSubDomains",
+        },
+      ]),
 ];
 
 const nextConfig = {

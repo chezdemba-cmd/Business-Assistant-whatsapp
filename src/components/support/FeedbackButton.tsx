@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -7,8 +7,8 @@ import { submitFeedbackAction } from "@/server/actions/support.actions";
 const CATEGORIES = [
   ["SUGGESTION", "Suggestion"],
   ["BUG", "Bug"],
-  ["AI", "Djeli IA"],
-  ["VOICE", "Djeli Voice"],
+  ["AI", "FEREDRON IA"],
+  ["VOICE", "FEREDRON Voice"],
   ["WHATSAPP", "WhatsApp"],
   ["OTHER", "Autre"],
 ] as const;

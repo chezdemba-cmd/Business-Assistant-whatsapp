@@ -1,9 +1,9 @@
-import {
+﻿import {
   getActivationBreakdown,
   getPlatformUsage,
 } from "@/server/analytics/product-metrics";
 
-export const metadata = { title: "Analytics — Console Djeli" };
+export const metadata = { title: "Analytics — Console FEREDRON" };
 
 export default async function AdminAnalyticsPage() {
   const [act, usage] = await Promise.all([getActivationBreakdown(), getPlatformUsage()]);
@@ -14,7 +14,7 @@ export default async function AdminAnalyticsPage() {
     ["— avec clients", act.hasCustomers],
     ["— avec commandes", act.hasOrders],
     ["— WhatsApp connecté", act.hasWhatsApp],
-    ["— ont utilisé Djeli IA", act.usedAi],
+    ["— ont utilisé FEREDRON IA", act.usedAi],
     ["Organisations ACTIVÉES (§46)", act.activated],
     ["Organisations actives 7 j", usage.activeOrganizations7d],
     ["Utilisateurs actifs 24 h", usage.activeUsers24h],

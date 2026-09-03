@@ -13,6 +13,7 @@ import { normalizeConfidence } from "./confidence";
 import { isAiIntent } from "./intents";
 import type { CapabilityContext } from "./capabilities";
 import { aiUsageGate, recordAiUsage } from "@/server/billing/ai-gate";
+import { getStockSnapshots } from "@/server/stock/stock-service";
 
 /**
  * Assistant interne `/ai` du commerçant. Les lectures s'exécutent directement
@@ -33,6 +34,9 @@ export type AssistantAnswer = {
 
 const REMINDER_RE =
   /(?:pr[ée]par(?:e|er)\s+)?(?:une\s+)?relanc(?:e|er)\s+(?:(?:pour|de|à)\s+)?(.+)/i;
+
+const SALES_GOAL_RE =
+  /(?:j['’]?ai\s+(?:encore\s+)?|vendre\s+)(\d+)\s+(.+?)(?:[.!?]|\s+(?:cette|dans|avant|d['’]ici)\b|$)/i;
 
 export async function runInternalAssistant(input: {
   organizationId: string;
@@ -58,6 +62,77 @@ export async function runInternalAssistant(input: {
   const startedAt = Date.now();
 
   try {
+    // ── Objectif de vente → brouillon de campagne, après confirmation ──
+    const salesMatch = question.match(SALES_GOAL_RE);
+    if (salesMatch && can(input.user.role, "marketing.manage")) {
+      const requestedQuantity = Number.parseInt(salesMatch[1]!, 10);
+      const productQuery = salesMatch[2]!.trim();
+      const terms = [productQuery, ...productQuery.split(/\s+/).filter((term) => term.length >= 4)];
+      const matches = await prisma.product.findMany({
+        where: {
+          organizationId: input.organizationId,
+          status: "ACTIVE",
+          OR: terms.flatMap((term) => [
+            { name: { contains: term, mode: "insensitive" as const } },
+            { sku: { contains: term, mode: "insensitive" as const } },
+          ]),
+        },
+        take: 4,
+        select: { id: true, name: true, salePrice: true, alertThreshold: true, purchasePrice: true },
+      });
+      if (matches.length === 0) {
+        await finish(aiRunId, "SUCCEEDED", "PRODUCT_SEARCH", startedAt);
+        return card0(`Je ne trouve pas de produit correspondant à « ${productQuery} ».`, "PRODUCT_SEARCH", "MEDIUM");
+      }
+      if (matches.length > 1) {
+        await finish(aiRunId, "SUCCEEDED", "PRODUCT_SEARCH", startedAt);
+        return card0(
+          `Plusieurs produits correspondent : ${matches.map((p) => p.name).join(", ")}. Précisez lequel.`,
+          "PRODUCT_SEARCH",
+          "MEDIUM",
+        );
+      }
+      const product = matches[0]!;
+      const snapshots = await getStockSnapshots(input.organizationId, [product]);
+      const available = Math.max(0, snapshots.get(product.id)?.available ?? 0);
+      if (available === 0) {
+        await finish(aiRunId, "SUCCEEDED", "PRODUCT_AVAILABILITY", startedAt);
+        return card0(`${product.name} n'a actuellement aucun stock disponible.`, "PRODUCT_AVAILABILITY", "HIGH");
+      }
+      const quantity = Math.min(requestedQuantity, available);
+      const proposal = await prisma.aiActionProposal.create({
+        data: {
+          organizationId: input.organizationId,
+          aiRunId,
+          type: "PREPARE_SALES_CAMPAIGN",
+          payload: { productId: product.id, requestedQuantity: quantity },
+          summary: `Préparer une campagne pour vendre ${quantity} × ${product.name}`,
+          status: "PENDING",
+          createdByUserId: input.user.id,
+          expiresAt: new Date(Date.now() + 24 * 3600 * 1000),
+        },
+        select: { id: true },
+      });
+      await writeAuditLog({
+        action: "AI_ACTION_PROPOSED",
+        entityType: "ai_action_proposal",
+        entityId: proposal.id,
+        organizationId: input.organizationId,
+        actorUserId: input.user.id,
+        metadata: { type: "PREPARE_SALES_CAMPAIGN", productId: product.id, quantity },
+      });
+      await finish(aiRunId, "SUCCEEDED", "PRODUCT_AVAILABILITY", startedAt);
+      void recordAiUsage(input.organizationId, input.organization.timezone, { input: 0, output: 0 });
+      const price = new Intl.NumberFormat("fr-FR").format(Number(product.salePrice));
+      return {
+        answer: `Stock vérifié : ${available} ${product.name} disponible(s), à ${price} ${input.organization.currency}. Je peux préparer un brouillon WhatsApp destiné aux anciens acheteurs de ce produit. Confirmez pour le créer ; aucun message ne sera envoyé.`,
+        intent: "PRODUCT_AVAILABILITY",
+        confidence: "HIGH",
+        cards: [{ title: "Plan de vente", lines: [`Objectif : ${quantity} article(s)`, "Canal : WhatsApp", "Audience : anciens acheteurs"] }],
+        proposal: { id: proposal.id, type: "PREPARE_SALES_CAMPAIGN", summary: `Vendre ${quantity} × ${product.name}` },
+      };
+    }
+
     // ── Action WRITE : préparation de relance → proposition à confirmer ──
     const reminderMatch = question.match(REMINDER_RE);
     if (reminderMatch && can(input.user.role, "debts.write")) {

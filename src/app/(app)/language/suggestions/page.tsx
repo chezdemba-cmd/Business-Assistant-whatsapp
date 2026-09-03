@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
 import { lcDb } from "@/language-core/db";
@@ -7,12 +7,12 @@ import { Card, PageHeader, Badge } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { EntryStatusActions } from "@/components/language/EntryForms";
 
-export const metadata = { title: "Suggestions linguistiques — Djeli" };
+export const metadata = { title: "Suggestions linguistiques — FEREDRON" };
 
 export default async function LanguageSuggestionsPage() {
   const ctx = await pageOrgContext();
   if (!can(ctx.role, "language.admin")) {
-    return <ForbiddenPanel role={ctx.role} requiredFor="Djeli Language Core" />;
+    return <ForbiddenPanel role={ctx.role} requiredFor="FEREDRON Language Core" />;
   }
 
   const pending = await lcDb.languageEntry.findMany({

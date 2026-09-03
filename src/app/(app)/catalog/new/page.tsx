@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
 import { can } from "@/server/rbac/permissions";
@@ -6,7 +6,7 @@ import { PageHeader, Card } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { ProductForm } from "@/components/catalog/ProductForm";
 
-export const metadata = { title: "Nouveau produit — Djeli" };
+export const metadata = { title: "Nouveau produit — FEREDRON" };
 
 export default async function NewProductPage() {
   const ctx = await pageOrgContext();

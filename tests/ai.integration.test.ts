@@ -63,8 +63,11 @@ import { test } from "node:test";
 
 const RUN = process.env.RUN_DB_TESTS === "1" || process.env.RUN_DB_TESTS === "true";
 
-test("intégration Djeli IA (nécessite RUN_DB_TESTS + DB)", { skip: !RUN }, () => {
-  throw new Error(
-    "Brancher ici handleInboundForAi / runInternalAssistant / approveOrderDraft sur une base de test.",
-  );
-});
+test(
+  "intégration Djeli IA (nécessite RUN_DB_TESTS + DB)",
+  {
+    skip: !RUN,
+    todo: "À implémenter : handleInboundForAi / runInternalAssistant / approveOrderDraft sur une base de test.",
+  },
+  () => {},
+);

@@ -1,9 +1,9 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { requireUser } from "@/server/auth/current-user";
 import { listMemberships } from "@/server/tenant/context";
 import { CreateOrgForm } from "./CreateOrgForm";
 
-export const metadata = { title: "Créer votre entreprise — Djeli" };
+export const metadata = { title: "Créer votre entreprise — FEREDRON" };
 
 export default async function OnboardingPage() {
   const user = await requireUser();

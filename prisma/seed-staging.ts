@@ -4,7 +4,7 @@
  *   npm run demo:seed      # (re)crée les données démo, idempotent
  *   npm run demo:reset      # supprime l'org démo puis re-seed (voir scripts/demo-reset.ts)
  *
- * Organisation : « DJELI DEMO COMMERCE » (slug djeli-demo-commerce), isDemo=true.
+ * Organisation : « FEREDRON DEMO COMMERCE » (slug feredron-demo-commerce), isDemo=true.
  * Aucune donnée réelle. Toutes les valeurs (prix FCFA, noms, téléphones) sont
  * FICTIVES et ne représentent pas des prix officiels.
  *
@@ -17,8 +17,8 @@ import { derivePaymentStatus } from "../src/server/finance/payment-rules.ts";
 
 const prisma = new PrismaClient();
 
-export const DEMO_ORG_SLUG = "djeli-demo-commerce";
-export const DEMO_ORG_NAME = "DJELI DEMO COMMERCE";
+export const DEMO_ORG_SLUG = "feredron-demo-commerce";
+export const DEMO_ORG_NAME = "FEREDRON DEMO COMMERCE";
 
 const FALLBACK_PASSWORD = "demo-djeli-staging";
 
@@ -327,7 +327,7 @@ export async function seedStaging(): Promise<Record<string, number | string>> {
     update: { status: "CONNECTED" },
     create: {
       organizationId: org.id, provider: "MOCK", phoneNumberId: "demo-phone-number-id",
-      displayPhoneNumber: "+223 90 00 00 00", verifiedName: "DJELI DEMO COMMERCE",
+      displayPhoneNumber: "+223 90 00 00 00", verifiedName: "FEREDRON DEMO COMMERCE",
       status: "CONNECTED", connectedAt: new Date(),
     },
   });

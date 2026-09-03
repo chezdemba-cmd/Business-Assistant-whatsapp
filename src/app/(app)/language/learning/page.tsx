@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { LanguageCode, LearningCandidateStatus, LearningCandidateType } from "@prisma/client";
 import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
@@ -9,7 +9,7 @@ import { Card, PageHeader, Badge } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { RecomputeButton } from "@/components/language/LearningForms";
 
-export const metadata = { title: "Learning Loop — Djeli" };
+export const metadata = { title: "Learning Loop — FEREDRON" };
 
 export default async function LearningQueuePage({
   searchParams,

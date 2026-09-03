@@ -31,3 +31,39 @@ prisma/*.db-journal
 
 # Prisma generated client (regenerated via `prisma generate`)
 # (kept out of VCS; run `npm run build` / `prisma generate` after clone)
+
+# Capacitor / mobile natif (dossiers générés par `npx cap add` — committer le
+# projet, ignorer les caches et sorties de build)
+/android/app/build/
+/android/build/
+/android/.gradle/
+/android/.gradle
+/android/.cxx/
+/android/captures/
+/android/.idea/
+/android/local.properties
+/android/gradle/wrapper/dists/
+/ios/App/build/
+/ios/App/Pods/
+/ios/App/output/
+/ios/App/DerivedData/
+/ios/DerivedData/
+*.xcuserstate
+*.keystore
+*.jks
+
+# Caches d'outillage mobile local (NON standard — dists Gradle, chemins trop
+# longs sur Windows, ~32k fichiers). Régénérables ; jamais versionnés.
+/.android/
+/.android-mobile/
+/.gradle-mobile/
+
+# Logs de process locaux
+/.feredron-server.out.log
+/.feredron-server.err.log
+
+# Captures d'écran de travail à la racine + configs d'outillage local
+# (les vrais assets produit vivent dans public/). Ne pas versionner.
+/feredron-*.png
+/feredron-*.xml
+/analytics.settings

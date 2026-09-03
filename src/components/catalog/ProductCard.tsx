@@ -25,7 +25,7 @@ export function ProductCard({
   return (
     <Link
       href={`/catalog/${product.id}`}
-      className="dj-card"
+      className="dj-card product-card"
       style={{
         padding: 18,
         display: "flex",
@@ -50,7 +50,7 @@ export function ProductCard({
         >
           {product.categoryName ?? "Sans catégorie"}
         </div>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 17, lineHeight: 1.2 }}>
+        <div className="product-card-name" style={{ fontFamily: "var(--font-display)", fontSize: 17, lineHeight: 1.2 }}>
           {product.name}
         </div>
         <div className="mono" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>

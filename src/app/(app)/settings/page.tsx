@@ -1,4 +1,4 @@
-import { pageOrgContext } from "@/server/page-context";
+﻿import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
 import { getConnectionForOrg } from "@/server/whatsapp/connection-service";
 import { Card, PageHeader } from "@/components/ui";
@@ -11,7 +11,7 @@ import {
   type WhatsAppConnectionView,
 } from "@/components/whatsapp/WhatsAppConnectionForm";
 
-export const metadata = { title: "Paramètres — Djeli" };
+export const metadata = { title: "Paramètres — FEREDRON" };
 
 export default async function SettingsPage() {
   const ctx = await pageOrgContext();
@@ -67,7 +67,7 @@ export default async function SettingsPage() {
         <h3 style={{ fontSize: 19, margin: "0 0 6px" }}>WhatsApp Business</h3>
         <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--text-2)" }}>
           Connectez le numéro WhatsApp Business Cloud API de l&apos;entreprise pour
-          recevoir et répondre aux messages depuis Djeli.
+          recevoir et répondre aux messages depuis FEREDRON.
         </p>
         <WhatsAppConnectionForm
           organizationId={organization.id}

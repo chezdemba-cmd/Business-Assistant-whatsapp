@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import Link from "next/link";
 import { requireSuperAdminPage } from "@/server/admin/guard";
 
-export const metadata = { title: "Console Djeli" };
+export const metadata = { title: "Console FEREDRON" };
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const user = await requireSuperAdminPage();
@@ -18,7 +18,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
           borderBottom: "1px solid var(--border)",
         }}
       >
-        <strong style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>Console Djeli</strong>
+        <strong style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>Console FEREDRON</strong>
         <nav style={{ display: "flex", gap: 14, fontSize: 14 }}>
           <Link href="/admin">Organisations</Link>
           <Link href="/admin/analytics">Analytics</Link>

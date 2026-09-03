@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
 import { lcDb } from "@/language-core/db";
@@ -6,12 +6,12 @@ import { learningCandidateStats } from "@/language-core/learning-candidate-servi
 import { Card, PageHeader, Badge } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 
-export const metadata = { title: "Djeli Language Core — Djeli" };
+export const metadata = { title: "FEREDRON Language Core — FEREDRON" };
 
 export default async function LanguageDashboardPage() {
   const ctx = await pageOrgContext();
   if (!can(ctx.role, "language.admin")) {
-    return <ForbiddenPanel role={ctx.role} requiredFor="Djeli Language Core" />;
+    return <ForbiddenPanel role={ctx.role} requiredFor="FEREDRON Language Core" />;
   }
 
   const [byStatus, byScope, byLang, domains, apps, candidates, recentMetrics] =
@@ -40,7 +40,7 @@ export default async function LanguageDashboardPage() {
   return (
     <>
       <PageHeader
-        title="Djeli Language Core"
+        title="FEREDRON Language Core"
         subtitle="Brique linguistique réutilisable (BM / FR / MIXED). OBSERVATION ≠ SUGGESTION ≠ VALIDÉ."
       />
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>

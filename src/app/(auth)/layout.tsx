@@ -1,6 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { getEnv } from "@/lib/env";
+import { BRAND } from "@/lib/brand";
 
 /** Écran d'authentification : panneau pitch à gauche, formulaire à droite (cf. maquette). */
 export default function AuthLayout({ children }: { children: ReactNode }) {
@@ -25,9 +27,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       ) : null}
       <aside className="auth-aside">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div className="auth-logo">D</div>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 19 }}>
-            Djeli
+          <Image src={BRAND.mark} alt="" width={48} height={48} priority />
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: "0.04em" }}>{BRAND.name}</div>
+            <div style={{ fontSize: 12, color: "var(--text-3)" }}>{BRAND.shortTagline}</div>
           </div>
         </div>
         <div style={{ maxWidth: 460 }}>
@@ -39,16 +42,16 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               margin: "0 0 20px",
             }}
           >
-            Votre commerce, piloté depuis WhatsApp.
+            Votre commercial, partout avec vous.
           </h1>
           <p style={{ margin: "0 0 28px", fontSize: 17, color: "var(--text-2)" }}>
-            Catalogue, clients, commandes, stock et relances — au même endroit,
-            pour les commerçants et distributeurs d&apos;Afrique de l&apos;Ouest.
+            FEREDRON transforme vos conversations, votre catalogue et vos
+            opportunités en ventes — simplement, depuis votre téléphone.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <span className="dj-badge dj-badge--ok">Multi-boutique</span>
+            <span className="dj-badge dj-badge--ok">Commercial IA</span>
             <span className="dj-badge dj-badge--accent">FCFA (XOF)</span>
-            <span className="dj-badge">Hors ligne toléré</span>
+            <span className="dj-badge">WhatsApp d&apos;abord · multi-canal</span>
           </div>
         </div>
         <div style={{ fontSize: 13, color: "var(--text-3)" }}>

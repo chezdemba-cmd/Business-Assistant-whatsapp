@@ -32,12 +32,13 @@ export async function GET() {
   }
 
   const ready = Object.values(checks).every(Boolean);
+  // `envIssues` n'est PAS renvoyé (peut nommer des variables / de la config).
+  // Le détail des garde-fous invalides est déjà tracé par `getEnv()` au démarrage.
   return NextResponse.json(
     {
       ready,
       appEnv: getEnv().APP_ENV,
       checks,
-      ...(env.ok ? {} : { envIssues: env.issues }),
     },
     { status: ready ? 200 : 503 },
   );

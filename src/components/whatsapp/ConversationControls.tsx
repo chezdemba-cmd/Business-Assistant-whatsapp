@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -52,7 +52,7 @@ export function ConversationModeControls({
       </div>
       <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
         Mode actuel : <strong>{CONVERSATION_MODE_LABEL[mode]}</strong>. En AUTO,
-        Djeli IA ne répond pas encore (Phase 6).
+        FEREDRON IA ne répond pas encore (Phase 6).
       </span>
       {state && !state.ok ? <span className="dj-error">{state.error}</span> : null}
     </div>

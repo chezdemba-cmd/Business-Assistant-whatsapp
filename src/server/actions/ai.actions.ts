@@ -139,6 +139,7 @@ export async function approveAiProposalAction(
     });
     revalidatePath("/reminders");
     revalidatePath("/orders");
+    revalidatePath("/marketing");
     return res;
   });
 }

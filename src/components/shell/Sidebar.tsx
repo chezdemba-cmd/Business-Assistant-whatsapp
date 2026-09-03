@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { Role } from "@prisma/client";
 import { can, type Permission } from "@/server/rbac/permissions";
+import { BRAND } from "@/lib/brand";
 
 type NavItem = {
   href: string;
@@ -14,8 +16,8 @@ type NavItem = {
 };
 
 const PILOTAGE: NavItem[] = [
-  { href: "/dashboard", label: "Tableau de bord" },
-  { href: "/catalog", label: "Catalogue", permission: "catalog.read" },
+  { href: "/dashboard", label: "Accueil" },
+  { href: "/catalog", label: "Produits", permission: "catalog.read" },
   { href: "/stock", label: "Stock", permission: "stock.read", exact: true },
   { href: "/stock/movements", label: "Mouvements", permission: "stock.read" },
   { href: "/customers", label: "Clients", permission: "customers.read" },
@@ -27,10 +29,10 @@ const PILOTAGE: NavItem[] = [
     label: "Conversations",
     permission: "conversations.read",
   },
-  { href: "/ai", label: "Djeli IA", permission: "ai.use" },
+  { href: "/ai", label: "FEREDRON IA", permission: "ai.use" },
   {
     href: "/recommendations",
-    label: "À surveiller",
+    label: "Opportunités",
     permission: "recommendations.read",
   },
   { href: "/marketing", label: "Marketing", permission: "marketing.read" },
@@ -89,23 +91,7 @@ export function Sidebar({
   return (
     <aside className="app-sidebar">
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 8px" }}>
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 999,
-            background: "var(--accent)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--on-accent)",
-            fontFamily: "var(--font-display)",
-            fontSize: 17,
-            flex: "none",
-          }}
-        >
-          D
-        </div>
+        <Image src={BRAND.mark} alt="" width={38} height={38} style={{ objectFit: "contain" }} />
         <div style={{ minWidth: 0 }}>
           <div
             style={{
@@ -117,7 +103,7 @@ export function Sidebar({
               textOverflow: "ellipsis",
             }}
           >
-            {organizationName}
+            {BRAND.name}
           </div>
           <div
             style={{
@@ -127,13 +113,13 @@ export function Sidebar({
               letterSpacing: "0.04em",
             }}
           >
-            {countryCode} · {currency}
+            {organizationName} · {countryCode}/{currency}
           </div>
         </div>
       </div>
 
       <nav style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        <div className="app-nav-section">PILOTAGE</div>
+        <div className="app-nav-section">VENDRE</div>
         {PILOTAGE.map((item) => (
           <NavLink key={item.href} item={item} role={role} />
         ))}
@@ -162,12 +148,11 @@ export function Sidebar({
             marginBottom: 4,
           }}
         >
-          Phase 7 — Assistant proactif
+          {BRAND.shortTagline}
         </div>
         <div style={{ fontSize: 12, color: "var(--ok-fg)", lineHeight: 1.45 }}>
-          Détection du stock, des créances, des commandes et des clients ;
-          recommandations et campagnes préparées. Aucun envoi sans votre
-          validation.
+          Votre commercial IA détecte les opportunités et prépare les prochaines
+          actions. Aucun envoi externe sans votre validation.
         </div>
       </div>
     </aside>

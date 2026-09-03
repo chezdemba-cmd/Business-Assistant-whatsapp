@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { pageOrgContext } from "@/server/page-context";
 import { listAuditLogs } from "@/server/audit/log";
 import { prisma } from "@/server/db/client";
@@ -11,12 +11,13 @@ import {
 } from "@/server/finance/finance-service";
 import { formatAmount } from "@/lib/format";
 import { todayRange } from "@/lib/tz";
-import { Card, PageHeader, roleLabel } from "@/components/ui";
+import { Card, PageHeader } from "@/components/ui";
 import { getProactiveDigest } from "@/server/automations/proactive";
 import { buildDailyDigest } from "@/server/automations/daily-digest";
 import { getOnboardingProgress } from "@/server/onboarding/progress";
+import { QuickActions } from "@/components/mobile/QuickActions";
 
-export const metadata = { title: "Tableau de bord — Djeli" };
+export const metadata = { title: "Accueil — FEREDRON" };
 
 export default async function DashboardPage() {
   const ctx = await pageOrgContext();
@@ -95,13 +96,75 @@ export default async function DashboardPage() {
     <>
       <PageHeader
         title={`Bonjour ${user.firstName}`}
-        subtitle={`${organization.name} · ${roleLabel(role)} · ${organization.countryCode}/${organization.currency}`}
+        subtitle={`Voici comment faire avancer les ventes de ${organization.name} aujourd'hui.`}
       />
+
+      <QuickActions role={role} />
+
+      <Card
+        style={{
+          marginBottom: 18,
+          padding: "24px",
+          background: "linear-gradient(135deg, #03172d 0%, #073c2a 100%)",
+          color: "white",
+          border: 0,
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 320px" }}>
+            <div style={{ color: "#8be5aa", fontSize: 12, fontWeight: 800, letterSpacing: "0.09em", marginBottom: 8 }}>
+              BRIEFING COMMERCIAL FEREDRON
+            </div>
+            <h2 className="feredron-briefing-title" style={{ fontSize: 28, marginBottom: 8 }}>
+              {proactive && proactive.total > 0
+                ? `${proactive.total} action(s) peuvent faire avancer vos ventes`
+                : "Votre activité est sous contrôle"}
+            </h2>
+            <p style={{ margin: 0, color: "#dbe8e0", maxWidth: 650 }}>
+              {proactive && proactive.total > 0
+                ? "Commencez par les priorités ci-dessous. FEREDRON prépare l'action, vous gardez toujours la validation finale."
+                : "Demandez à FEREDRON quoi vendre, à qui et avec quelle action commerciale."}
+            </p>
+          </div>
+          <Link
+            href="/ai"
+            className="dj-btn dj-btn--primary"
+            style={{ alignSelf: "center", background: "#ffb800", color: "#03172d", borderColor: "#ffb800" }}
+          >
+            Parler à FEREDRON
+          </Link>
+        </div>
+
+        {proactive?.items.length ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 10, marginTop: 20 }}>
+            {proactive.items.slice(0, 3).map((item, index) => (
+              <Link
+                key={item.type}
+                href={item.href}
+                style={{
+                  display: "block",
+                  padding: "14px 16px",
+                  borderRadius: 16,
+                  background: "rgba(255,255,255,0.1)",
+                  color: "white",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                }}
+              >
+                <div style={{ color: "#ffcf3d", fontSize: 11, fontWeight: 800, marginBottom: 5 }}>
+                  PRIORITÉ {index + 1}
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700 }}>{item.label}</div>
+                <div style={{ fontSize: 12, color: "#c9d9cf", marginTop: 4 }}>Ouvrir et agir →</div>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+      </Card>
 
       {stock ? (
         <>
           <h3 style={{ fontSize: 15, margin: "0 0 12px", color: "var(--text-2)" }}>
-            Catalogue &amp; stock
+            Produits à vendre
           </h3>
           <div
             style={{
@@ -161,7 +224,7 @@ export default async function DashboardPage() {
       {showCommerce ? (
         <>
           <h3 style={{ fontSize: 15, margin: "0 0 12px", color: "var(--text-2)" }}>
-            Activité du jour
+            Résultats du jour
           </h3>
           <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "0 0 12px" }}>
             Calculée sur le fuseau {organization.timezone}.
@@ -224,7 +287,7 @@ export default async function DashboardPage() {
       {showDebts && overdueDebts && cashToday ? (
         <>
           <h3 style={{ fontSize: 15, margin: "0 0 12px", color: "var(--text-2)" }}>
-            Créances &amp; encaissements
+            Argent à encaisser
           </h3>
           <div
             style={{
@@ -283,7 +346,7 @@ export default async function DashboardPage() {
       {showRecos && proactive ? (
         <>
           <h3 style={{ fontSize: 15, margin: "0 0 12px", color: "var(--text-2)" }}>
-            À surveiller aujourd&apos;hui
+            Toutes les opportunités
           </h3>
           <Card style={{ marginBottom: digest ? 12 : 28 }}>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: proactive.items.length ? 10 : 0 }}>
@@ -347,7 +410,7 @@ export default async function DashboardPage() {
             {onboarding.doneCount}/{onboarding.total} étapes ·{" "}
             {onboarding.activated
               ? "votre organisation est activée."
-              : "quelques étapes pour tirer parti de Djeli."}
+              : "quelques étapes pour tirer parti de FEREDRON."}
           </p>
           <div style={{ height: 6, borderRadius: 999, background: "var(--border-soft)", marginBottom: 16 }}>
             <div

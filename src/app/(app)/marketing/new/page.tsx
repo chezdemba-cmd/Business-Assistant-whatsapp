@@ -1,10 +1,10 @@
-import { pageOrgContext } from "@/server/page-context";
+﻿import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
 import { PageHeader } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { CampaignForm } from "@/components/marketing/CampaignForm";
 
-export const metadata = { title: "Nouvelle campagne — Djeli" };
+export const metadata = { title: "Nouvelle campagne — FEREDRON" };
 
 export default async function NewCampaignPage() {
   const ctx = await pageOrgContext();

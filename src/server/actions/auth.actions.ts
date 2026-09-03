@@ -29,6 +29,16 @@ export async function registerAction(
   formData: FormData,
 ): Promise<ActionResult<Redirect>> {
   return runAction(async () => {
+    const ip = await callerIp();
+    const rl = await consumeRateLimit(
+      `register:${ip}`,
+      getEnv().REGISTER_RATE_LIMIT_PER_MIN,
+      60_000,
+    );
+    if (!rl.allowed) {
+      throw RateLimited("Trop de tentatives. Réessayez dans une minute.");
+    }
+
     const input = registerSchema.parse(formToObject(formData));
 
     const existing = await prisma.user.findUnique({
@@ -36,7 +46,12 @@ export async function registerAction(
       select: { id: true },
     });
     if (existing) {
-      throw Conflict("Un compte existe déjà avec cet email.");
+      // Message volontairement non affirmatif : ne confirme pas frontalement
+      // l'existence du compte. La non-énumération complète (réponse identique
+      // + notification e-mail) attend le système d'e-mail (cf. reset mot de passe).
+      throw Conflict(
+        "Impossible de créer un compte avec cet e-mail. S'il vous appartient déjà, connectez-vous.",
+      );
     }
 
     const user = await prisma.user.create({

@@ -1,4 +1,4 @@
-import { pageOrgContext } from "@/server/page-context";
+﻿import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
 import { PageHeader, Card } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
@@ -7,7 +7,7 @@ import { effectiveRuleConfig } from "@/server/automations/rules";
 import { RuleControls, type RuleRow } from "@/components/automations/RuleControls";
 import { RunAutomationsButton } from "@/components/automations/RunAutomationsButton";
 
-export const metadata = { title: "Automatisations — Djeli" };
+export const metadata = { title: "Automatisations — FEREDRON" };
 
 export default async function AutomationsPage() {
   const ctx = await pageOrgContext();
@@ -38,7 +38,7 @@ export default async function AutomationsPage() {
     <>
       <PageHeader
         title="Automatisations"
-        subtitle="Djeli surveille votre activité et propose des recommandations. Rien n'est envoyé automatiquement : vous gardez la main."
+        subtitle="FEREDRON surveille votre activité et propose des recommandations. Rien n'est envoyé automatiquement : vous gardez la main."
         actions={canManage ? <RunAutomationsButton /> : undefined}
       />
 

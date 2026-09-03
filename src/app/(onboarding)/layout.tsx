@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 
 export default function OnboardingLayout({ children }: { children: ReactNode }) {
   return (
@@ -27,7 +27,7 @@ export default function OnboardingLayout({ children }: { children: ReactNode }) 
         >
           D
         </div>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: 16 }}>Djeli</div>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 16 }}>FEREDRON</div>
       </div>
       {children}
     </div>

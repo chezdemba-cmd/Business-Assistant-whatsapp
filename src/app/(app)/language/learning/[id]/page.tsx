@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
@@ -13,7 +13,7 @@ import {
   ReplayPanel,
 } from "@/components/language/LearningForms";
 
-export const metadata = { title: "Candidat linguistique — Djeli" };
+export const metadata = { title: "Candidat linguistique — FEREDRON" };
 
 type Factor = { label: string; contribution: number };
 

@@ -1,5 +1,5 @@
 import "server-only";
-import { isAppError } from "@/server/errors";
+import { isAppError, logError } from "@/server/errors";
 import { orgHasFeature } from "./guard.ts";
 import { featureUnavailableMessage } from "./features.ts";
 import {
@@ -25,10 +25,18 @@ export async function aiUsageGate(
     if (!check.allowed) return { ok: false, message: limitReachedMessage(check) };
     return { ok: true };
   } catch (err) {
-    // Un problème d'abonnement ne doit pas bloquer l'assistant : on laisse
-    // passer (fail-open) mais sans quota — un vrai souci sera visible ailleurs.
+    // Erreur métier attendue (état d'abonnement en limite, contexte manquant…) :
+    // on reste permissif pour ne pas bloquer l'assistant sur un cas normal.
     if (isAppError(err)) return { ok: true };
-    return { ok: true };
+    // Erreur INATTENDUE (bug, DB indisponible…) : fail-closed + trace. Un défaut
+    // du service de facturation ne doit pas accorder un accès LLM non plafonné
+    // et silencieux (§13, §20, §21).
+    logError("billing.aiUsageGate", err);
+    return {
+      ok: false,
+      message:
+        "L'assistant est momentanément indisponible. Réessayez dans quelques instants.",
+    };
   }
 }
 

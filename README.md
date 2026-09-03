@@ -1,12 +1,29 @@
-# Djeli's Business Assistant
+# FEREDRON
 
-Copilote commercial WhatsApp + IA pour commerçants, grossistes et distributeurs
+**Votre commercial, partout avec vous.**
+
+Commercial IA pour aider les commerçants à vendre davantage, simplement, sur tous leurs canaux.
 d'Afrique de l'Ouest.
 
-**État : Phase 8 terminée + environnement STAGING / DÉMO prêt pour testeurs.**
+**État : Phase 9 — Mobile-first + PWA + shell natif (Capacitor) prêt.**
+
+> **Mobile (Phase 9)** : navigation basse (Accueil · Commandes · Djeli · Clients ·
+> Plus), action centrale « Parler à Djeli », listes en **cartes** sur mobile
+> (commandes / clients / stock / créances), actions terrain sur la fiche client
+> (Appeler / WhatsApp / Itinéraire), quick actions d'accueil. **PWA** installable
+> (`manifest`, service worker, icônes, page `/offline`, bandeau réseau). **Deep
+> links** `djeli://order/123` + allowlist de navigation WebView. Machine à états
+> **Voice** (`IDLE…LOW_CONFIDENCE…FAILED`). **Capacitor** retenu (mode *remote
+> hosted*) : `capacitor.config.ts`, scripts `mobile:sync|android|ios`, env
+> `MOBILE_APP_ID`/`APP_VERSION`/`*_API_URL`. Le `cap add android/ios` + les
+> builds APK/AAB/IPA sont documentés (`docs/MOBILE-ARCHITECTURE.md`, `PWA.md`,
+> `ANDROID-BUILD.md`, `IOS-BUILD.md`, `MOBILE-QA.md`, `ANDROID-STORE.md`,
+> `IOS-STORE.md`) — non exécutables ici (pas de SDK Android / macOS).
+
+**État antérieur : Phase 8 terminée + environnement STAGING / DÉMO.**
 
 > **Staging / démo** : `APP_ENV=staging` + `npm run demo:seed` crée l'organisation
-> « DJELI DEMO COMMERCE » (`isDemo=true`) — 5 comptes de rôles, ~20 produits
+> « FEREDRON DEMO COMMERCE » (`isDemo=true`) — 5 comptes de rôles, ~20 produits
 > (états de stock variés), ~18 clients, 16 commandes (tous statuts + créances par
 > tranche), conversations WhatsApp mock FR/BM/MIXED, recommandations + résumé du
 > jour. Bannière « ENVIRONNEMENT DE DÉMONSTRATION » partout, envoi externe
@@ -189,6 +206,13 @@ npm install
 ```bash
 cp .env.example .env
 # Éditer .env : DATABASE_URL (obligatoire) + AUTH_SESSION_SECRET (≥ 32 car.)
+
+# Démarrer PostgreSQL local (écoute uniquement sur 127.0.0.1:5433)
+docker compose up -d postgres
+
+# Initialiser le schéma et les comptes de démonstration
+npm run prisma:deploy
+npm run db:seed
 node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"  # génère un secret
 npm run check:env   # valide la configuration
 ```

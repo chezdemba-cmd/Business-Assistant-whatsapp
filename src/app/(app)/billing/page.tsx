@@ -1,14 +1,14 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
 import { PageHeader, Card } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { getBillingOverview } from "@/server/billing/entitlements";
 
-export const metadata = { title: "Offre & usage — Djeli" };
+export const metadata = { title: "Offre & usage — FEREDRON" };
 
 const METRIC_LABEL: Record<string, string> = {
-  AI_REQUESTS: "Requêtes Djeli IA",
+  AI_REQUESTS: "Requêtes FEREDRON IA",
   AI_TOKENS: "Jetons IA",
   VOICE_SECONDS: "Secondes de transcription",
   WHATSAPP_MESSAGES: "Messages WhatsApp",
@@ -17,8 +17,8 @@ const METRIC_LABEL: Record<string, string> = {
 };
 const FEATURE_LABEL: Record<string, string> = {
   WHATSAPP: "WhatsApp Business",
-  AI: "Djeli IA",
-  VOICE: "Djeli Voice",
+  AI: "FEREDRON IA",
+  VOICE: "FEREDRON Voice",
   AUTOMATIONS: "Automatisations",
   MARKETING: "Marketing",
   LANGUAGE_ADVANCED: "Language Core avancé",

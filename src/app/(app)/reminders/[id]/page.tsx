@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -10,7 +10,7 @@ import {
   CancelCampaignButton,
 } from "@/components/finance/CampaignActions";
 
-export const metadata = { title: "Campagne de relance — Djeli" };
+export const metadata = { title: "Campagne de relance — FEREDRON" };
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Brouillon",

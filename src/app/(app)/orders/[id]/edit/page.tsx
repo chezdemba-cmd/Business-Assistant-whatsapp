@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -11,7 +11,7 @@ import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { EditOrderLinesForm } from "@/components/orders/EditOrderLinesForm";
 import type { OrderLine } from "@/components/orders/OrderLines";
 
-export const metadata = { title: "Modifier la commande — Djeli" };
+export const metadata = { title: "Modifier la commande — FEREDRON" };
 
 export default async function EditOrderPage({
   params,

@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -15,8 +15,9 @@ import { CustomerArchiveToggle } from "@/components/customers/CustomerArchiveTog
 import { RecordPaymentForm } from "@/components/finance/RecordPaymentForm";
 import { PrepareReminderButton } from "@/components/finance/PrepareReminderButton";
 import { MarketingConsentToggle } from "@/components/marketing/MarketingConsentToggle";
+import { CustomerContactActions } from "@/components/customers/CustomerContactActions";
 
-export const metadata = { title: "Fiche client — Djeli" };
+export const metadata = { title: "Fiche client — FEREDRON" };
 
 export default async function CustomerDetailPage({
   params,
@@ -126,6 +127,13 @@ export default async function CustomerDetailPage({
             ) : null}
           </>
         }
+      />
+
+      <CustomerContactActions
+        phone={customer.phone}
+        address={customer.address}
+        area={customer.area}
+        city={customer.city}
       />
 
       <div

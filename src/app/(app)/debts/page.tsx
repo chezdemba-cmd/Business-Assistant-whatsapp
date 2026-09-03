@@ -1,4 +1,4 @@
-import { pageOrgContext } from "@/server/page-context";
+﻿import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
 import { orderScopeWhere, canSeeAllCrm } from "@/server/crm/scope";
 import {
@@ -17,7 +17,7 @@ import { Pager } from "@/components/Pager";
 import { DebtsFilters } from "@/components/finance/DebtsFilters";
 import { DebtsTable, type DebtTableRow } from "@/components/finance/DebtsTable";
 
-export const metadata = { title: "Créances — Djeli" };
+export const metadata = { title: "Créances — FEREDRON" };
 
 const PER_PAGE = 20;
 

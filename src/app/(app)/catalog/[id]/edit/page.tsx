@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -7,7 +7,7 @@ import { PageHeader, Card } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { ProductForm } from "@/components/catalog/ProductForm";
 
-export const metadata = { title: "Modifier le produit — Djeli" };
+export const metadata = { title: "Modifier le produit — FEREDRON" };
 
 export default async function EditProductPage({
   params,

@@ -1,17 +1,17 @@
-import { LegalShell } from "../legal/LegalShell";
+﻿import { LegalShell } from "../legal/LegalShell";
 
-export const metadata = { title: "Conditions d'utilisation — Djeli" };
+export const metadata = { title: "Conditions d'utilisation — FEREDRON" };
 
 export default function TermsPage() {
   return (
     <LegalShell title="Conditions d'utilisation">
       <p>
-        En utilisant Djeli, l&apos;organisation cliente accepte les présentes
+        En utilisant FEREDRON, l&apos;organisation cliente accepte les présentes
         conditions (version pilote).
       </p>
       <h2>Service</h2>
       <p>
-        Djeli est un assistant commercial : WhatsApp Business, IA, voix,
+        FEREDRON est un assistant commercial : WhatsApp Business, IA, voix,
         catalogue, stock, CRM, créances, automatisations et marketing. Le
         service est fourni « en l&apos;état » pendant la phase pilote.
       </p>

@@ -1,7 +1,7 @@
 import type { MarketingCampaignType } from "@prisma/client";
 
 /**
- * Génération de contenu marketing — PUR (§18, §48). Djeli IA peut reformuler,
+ * Génération de contenu marketing — PUR (§18, §48). FEREDRON peut reformuler,
  * mais jamais publier : le texte reste un APERÇU à valider. Placeholder unique
  * `{{name}}` remplacé par le nom du client à l'envoi.
  */
@@ -42,4 +42,19 @@ export function validateCampaignMessage(message: string): string {
     throw new Error(`Le message dépasse ${MESSAGE_MAX_LEN} caractères.`);
   }
   return trimmed;
+}
+
+/** Message factuel fondé uniquement sur le catalogue et le stock courant. */
+export function salesCampaignMessage(input: {
+  organizationName: string;
+  productName: string;
+  unitPrice: number;
+  currency: string;
+  available: number;
+}): string {
+  const currency = ["XOF", "XAF"].includes(input.currency) ? "FCFA" : input.currency;
+  const price = new Intl.NumberFormat("fr-FR").format(Math.trunc(input.unitPrice));
+  return validateCampaignMessage(
+    `Bonjour {{name}}, ${input.organizationName} vous propose ${input.productName} à ${price} ${currency}. ${input.available} article(s) disponible(s) cette semaine. Répondez à ce message pour réserver.`,
+  );
 }

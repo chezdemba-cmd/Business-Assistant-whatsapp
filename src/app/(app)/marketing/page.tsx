@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
 import { PageHeader, Card, EmptyState } from "@/components/ui";
@@ -6,7 +6,7 @@ import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { listCampaigns } from "@/server/marketing/campaign-service";
 import { formatDateTime } from "@/lib/format";
 
-export const metadata = { title: "Marketing — Djeli" };
+export const metadata = { title: "Marketing — FEREDRON" };
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Brouillon",

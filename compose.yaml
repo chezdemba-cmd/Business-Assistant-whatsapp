@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: djeli-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: djeli
+      POSTGRES_PASSWORD: djeli_staging_pw
+      POSTGRES_DB: djeli_staging
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - djeli_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U djeli -d djeli_staging"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  djeli_postgres_data:

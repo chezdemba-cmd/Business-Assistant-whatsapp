@@ -41,6 +41,15 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Audit — dépendances runtime (bloquant sur CRITICAL)
+        run: npm audit --omit=dev --audit-level=critical
+
+      - name: Audit — rapport complet (non bloquant)
+        run: npm audit || true
+
       - name: Validate environment
         run: npm run check:env
 

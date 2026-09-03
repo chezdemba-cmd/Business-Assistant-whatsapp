@@ -89,7 +89,7 @@ export async function getProactiveDigest(
   const headline =
     total === 0
       ? "Rien de particulier à surveiller aujourd'hui."
-      : `Djeli a détecté ${total} point(s) à surveiller aujourd'hui.`;
+      : `FEREDRON a détecté ${total} opportunité(s) ou action(s) à traiter aujourd'hui.`;
 
   return { total, headline, items };
 }

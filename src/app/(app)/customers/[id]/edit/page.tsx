@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -8,7 +8,7 @@ import { PageHeader, Card } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { CustomerForm } from "@/components/customers/CustomerForm";
 
-export const metadata = { title: "Modifier le client — Djeli" };
+export const metadata = { title: "Modifier le client — FEREDRON" };
 
 export default async function EditCustomerPage({
   params,

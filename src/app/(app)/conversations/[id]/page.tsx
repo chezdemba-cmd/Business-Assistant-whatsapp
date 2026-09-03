@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -27,7 +27,7 @@ import { getActiveDraftForConversation } from "@/server/ai/order-draft-service";
 import { OrderDraftCard } from "@/components/ai/OrderDraftCard";
 import { VoiceMessage } from "@/components/voice/VoiceMessage";
 
-export const metadata = { title: "Conversation — Djeli" };
+export const metadata = { title: "Conversation — FEREDRON" };
 
 const PAGE_SIZE = 30;
 
@@ -244,7 +244,7 @@ export default async function ConversationThreadPage({
                           opacity: 0.85,
                         }}
                       >
-                        Djeli IA
+                        FEREDRON IA
                       </div>
                     ) : null}
                     {m.type === "AUDIO" ? (

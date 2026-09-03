@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -69,7 +69,7 @@ export function OrderDraftCard({
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
-        <strong style={{ fontSize: 13 }}>Commande proposée par Djeli IA</strong>
+        <strong style={{ fontSize: 13 }}>Commande proposée par FEREDRON IA</strong>
         <span className="dj-badge">{STATUS_LABEL[draft.status] ?? draft.status}</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 13 }}>

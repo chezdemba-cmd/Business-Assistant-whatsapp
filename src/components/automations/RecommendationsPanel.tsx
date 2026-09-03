@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -39,7 +39,7 @@ export function RecommendationsPanel({ rows }: { rows: RecoRow[] }) {
     return (
       <Card style={{ textAlign: "center", padding: "36px 24px" }}>
         <p style={{ margin: 0, color: "var(--text-2)", fontSize: 14 }}>
-          Aucune recommandation active. Djeli surveille le stock, les créances,
+          Aucune recommandation active. FEREDRON surveille le stock, les créances,
           les commandes et les clients — vous serez alerté dès qu&apos;un point
           mérite votre attention.
         </p>

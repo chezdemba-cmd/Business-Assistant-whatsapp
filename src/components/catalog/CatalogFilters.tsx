@@ -28,6 +28,7 @@ export function CatalogFilters({
 
   return (
     <form
+      className="catalog-filters"
       onSubmit={(e) => e.preventDefault()}
       style={{
         display: "grid",
@@ -39,7 +40,7 @@ export function CatalogFilters({
       <Input
         name="q"
         defaultValue={params.get("q") ?? ""}
-        placeholder="Rechercher : nom, SKU, code-barres, fournisseur…"
+        placeholder="Nom, SKU ou code-barres"
         onChange={(e) => {
           const v = e.currentTarget.value;
           window.clearTimeout(
@@ -53,7 +54,7 @@ export function CatalogFilters({
         defaultValue={params.get("category") ?? ""}
         onChange={(e) => update({ category: e.currentTarget.value })}
       >
-        <option value="">Toutes catégories</option>
+        <option value="">Catégories</option>
         {categories.map((c) => (
           <option key={c.id} value={c.id}>
             {c.name}
@@ -64,7 +65,7 @@ export function CatalogFilters({
         defaultValue={params.get("state") ?? ""}
         onChange={(e) => update({ state: e.currentTarget.value })}
       >
-        <option value="">Tous les états</option>
+        <option value="">Tous états</option>
         <option value="IN_STOCK">En stock</option>
         <option value="LOW_STOCK">Stock faible</option>
         <option value="OUT_OF_STOCK">Rupture</option>

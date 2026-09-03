@@ -31,6 +31,7 @@ export function CustomersFilters({
 
   return (
     <form
+      className="customers-filters"
       onSubmit={(e) => e.preventDefault()}
       style={{
         display: "grid",
@@ -43,7 +44,7 @@ export function CustomersFilters({
     >
       <Input
         defaultValue={params.get("q") ?? ""}
-        placeholder="Rechercher : nom, téléphone, boutique, zone…"
+        placeholder="Nom, téléphone ou boutique"
         onChange={(e) => {
           const v = e.currentTarget.value;
           const w = window as unknown as { __djCustT?: number };
@@ -55,7 +56,7 @@ export function CustomersFilters({
         defaultValue={params.get("type") ?? ""}
         onChange={(e) => update({ type: e.currentTarget.value })}
       >
-        <option value="">Tous les types</option>
+        <option value="">Tous types</option>
         {CUSTOMER_TYPES.map((t) => (
           <option key={t} value={t}>
             {CUSTOMER_TYPE_LABEL[t]}

@@ -11,6 +11,10 @@ import type {
  * Provider réel — WhatsApp Business Cloud API (Graph). Version centralisée via
  * `META_GRAPH_API_VERSION`. Aucun secret n'est journalisé.
  */
+/** Délai maximal d'un appel à l'API Graph. Inférieur au timeout de
+ *  transaction / job pour libérer le worker avant qu'il ne soit lui-même tué. */
+const REQUEST_TIMEOUT_MS = 15_000;
+
 export class MetaWhatsAppProvider implements WhatsAppProvider {
   readonly name = "meta" as const;
   private readonly version: string;
@@ -29,9 +33,12 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
     ctx: WhatsAppSendContext,
     payload: Record<string, unknown>,
   ): Promise<WhatsAppSendResult> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     try {
       const res = await fetch(this.endpoint(ctx.phoneNumberId), {
         method: "POST",
+        signal: controller.signal,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${ctx.accessToken}`,
@@ -70,12 +77,19 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
       }
       return { ok: true, externalMessageId: id };
     } catch (error) {
+      const timedOut =
+        error instanceof Error &&
+        (error.name === "AbortError" || error.name === "TimeoutError");
       logError("MetaWhatsAppProvider.post", error);
       return {
         ok: false,
-        errorCode: "NETWORK",
-        errorMessage: "Impossible de joindre l'API WhatsApp.",
+        errorCode: timedOut ? "TIMEOUT" : "NETWORK",
+        errorMessage: timedOut
+          ? "Délai dépassé en joignant l'API WhatsApp."
+          : "Impossible de joindre l'API WhatsApp.",
       };
+    } finally {
+      clearTimeout(timer);
     }
   }
 

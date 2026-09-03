@@ -1,16 +1,16 @@
-import { pageOrgContext } from "@/server/page-context";
+﻿import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
 import { PageHeader } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { Assistant } from "@/components/ai/Assistant";
 import { getProactiveDigest } from "@/server/automations/proactive";
 
-export const metadata = { title: "Djeli IA — Djeli" };
+export const metadata = { title: "FEREDRON IA — FEREDRON" };
 
 export default async function AiPage() {
   const ctx = await pageOrgContext();
   if (!can(ctx.role, "ai.use")) {
-    return <ForbiddenPanel role={ctx.role} requiredFor="Djeli IA" />;
+    return <ForbiddenPanel role={ctx.role} requiredFor="FEREDRON IA" />;
   }
 
   const proactive = can(ctx.role, "recommendations.read")
@@ -20,7 +20,7 @@ export default async function AiPage() {
   return (
     <>
       <PageHeader
-        title="Djeli IA"
+        title="FEREDRON IA"
         subtitle="Interrogez vos données réelles. Les actions restent sous votre contrôle."
       />
       <Assistant

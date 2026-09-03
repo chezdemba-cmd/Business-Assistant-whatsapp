@@ -1,9 +1,17 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useRef, useState } from "react";
 import { transcribeAppAudioAction } from "@/server/actions/voice.actions";
+import { voiceHint } from "@/lib/voice-states";
 
 type State = "idle" | "recording" | "transcribing" | "error";
+
+const HINT: Record<State, string> = {
+  idle: voiceHint("IDLE"),
+  recording: voiceHint("RECORDING"),
+  transcribing: voiceHint("TRANSCRIBING"),
+  error: voiceHint("FAILED"),
+};
 
 /**
  * Bouton micro pour `/ai` (et réutilisable ailleurs). Enregistre via
@@ -104,54 +112,63 @@ export function MicButton({
 
   if (state === "recording") {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span
-          aria-hidden
-          style={{
-            width: 10,
-            height: 10,
-            borderRadius: 999,
-            background: "var(--accent)",
-            animation: "pulse 1s infinite",
-          }}
-        />
-        <span className="tnum" style={{ fontSize: 13, minWidth: 34 }}>
-          {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, "0")}
-        </span>
-        <button
-          type="button"
-          className="dj-btn dj-btn--primary"
-          style={{ height: 38 }}
-          onClick={() => stop(false)}
-        >
-          Terminer
-        </button>
-        <button
-          type="button"
-          className="dj-btn dj-btn--ghost"
-          style={{ height: 38 }}
-          onClick={() => stop(true)}
-        >
-          Annuler
-        </button>
+      <div className="mic-button-wrap mic-button-wrap--recording" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span
+            aria-hidden
+            style={{
+              width: 12,
+              height: 12,
+              borderRadius: 999,
+              background: "var(--accent)",
+              animation: "pulse 1s infinite",
+              flex: "none",
+            }}
+          />
+          <span className="tnum" style={{ fontSize: 14, minWidth: 40 }}>
+            {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, "0")}
+          </span>
+          <button
+            type="button"
+            className="dj-btn dj-btn--primary"
+            style={{ minHeight: 44 }}
+            onClick={() => stop(false)}
+          >
+            Terminer
+          </button>
+          <button
+            type="button"
+            className="dj-btn dj-btn--ghost"
+            style={{ minHeight: 44 }}
+            onClick={() => stop(true)}
+          >
+            Annuler
+          </button>
+        </div>
+        <span className="mic-button-hint" style={{ fontSize: 11, color: "var(--text-muted)" }}>{HINT.recording}</span>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <button
-        type="button"
-        className="dj-btn dj-btn--outline"
-        style={{ height: 44, minWidth: 44, fontSize: 18, padding: "0 14px" }}
-        onClick={start}
-        disabled={disabled || state === "transcribing"}
-        aria-label="Enregistrer un message vocal"
-        title="Poser la question à la voix"
-      >
-        {state === "transcribing" ? "…" : "🎤"}
-      </button>
-      {msg ? <span className="dj-error">{msg}</span> : null}
+    <div className="mic-button-wrap" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <button
+          type="button"
+          className="dj-btn dj-btn--outline"
+          style={{ minHeight: 48, minWidth: 48, fontSize: 20, padding: "0 16px" }}
+          onClick={start}
+          disabled={disabled || state === "transcribing"}
+          aria-label="Parler à FEREDRON"
+          title="Poser la question à la voix (langue détectée automatiquement)"
+        >
+          {state === "transcribing" ? "…" : "🎤"}
+        </button>
+        {msg ? <span className="dj-error">{msg}</span> : null}
+      </div>
+      <span className="mic-button-hint" style={{ fontSize: 11, color: "var(--text-muted)" }}>
+        {state === "error" ? HINT.error : state === "transcribing" ? HINT.transcribing : `${HINT.idle} · langue AUTO`}
+      </span>
     </div>
   );
 }

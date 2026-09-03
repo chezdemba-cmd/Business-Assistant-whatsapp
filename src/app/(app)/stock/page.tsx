@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
 import { can } from "@/server/rbac/permissions";
@@ -10,7 +10,7 @@ import { formatAmount } from "@/lib/format";
 import { Card, PageHeader, StockStateBadge, EmptyState } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 
-export const metadata = { title: "Stock — Djeli" };
+export const metadata = { title: "Stock — FEREDRON" };
 
 const COMPUTED_STATES = ["IN_STOCK", "LOW_STOCK", "OUT_OF_STOCK"] as const;
 
@@ -150,7 +150,7 @@ export default async function StockPage({
       ) : (
         <Card style={{ padding: 0, overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+            <table className="dj-cards-sm" style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
               <thead>
                 <tr style={{ background: "var(--panel)" }}>
                   {["Produit", "Physique", "Réservé", "Disponible", "Seuil", "État"].map(
@@ -176,7 +176,7 @@ export default async function StockPage({
               <tbody>
                 {rows.map(({ p, s }) => (
                   <tr key={p.id} style={{ borderTop: "1px solid var(--border-soft)" }}>
-                    <td style={{ padding: "14px 16px" }}>
+                    <td data-label="Produit" style={{ padding: "14px 16px" }}>
                       <Link href={`/catalog/${p.id}`} style={{ fontWeight: 700 }}>
                         {p.name}
                       </Link>
@@ -184,16 +184,18 @@ export default async function StockPage({
                         SKU {p.sku}
                       </div>
                     </td>
-                    <td className="tnum" style={{ padding: "14px 16px", textAlign: "right" }}>
+                    <td data-label="Physique" className="tnum" style={{ padding: "14px 16px", textAlign: "right" }}>
                       {s?.physical ?? 0}
                     </td>
                     <td
+                      data-label="Réservé"
                       className="tnum"
                       style={{ padding: "14px 16px", textAlign: "right", color: "var(--text-3)" }}
                     >
                       {s?.reserved ?? 0}
                     </td>
                     <td
+                      data-label="Disponible"
                       className="tnum"
                       style={{
                         padding: "14px 16px",
@@ -205,12 +207,13 @@ export default async function StockPage({
                       {s?.available ?? 0}
                     </td>
                     <td
+                      data-label="Seuil"
                       className="tnum"
                       style={{ padding: "14px 16px", textAlign: "right", color: "var(--text-3)" }}
                     >
                       {p.alertThreshold}
                     </td>
-                    <td style={{ padding: "14px 16px" }}>
+                    <td data-label="État" style={{ padding: "14px 16px" }}>
                       {s ? (
                         <StockStateBadge state={s.state} label={s.stateLabel} />
                       ) : null}

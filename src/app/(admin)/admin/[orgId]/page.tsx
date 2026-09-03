@@ -1,10 +1,10 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOrganizationAdminView } from "@/server/admin/console-service";
 import { isAppError } from "@/server/errors";
 import { AdminOrgControls } from "@/components/admin/AdminOrgControls";
 
-export const metadata = { title: "Organisation — Console Djeli" };
+export const metadata = { title: "Organisation — Console FEREDRON" };
 
 export default async function AdminOrgPage({
   params,

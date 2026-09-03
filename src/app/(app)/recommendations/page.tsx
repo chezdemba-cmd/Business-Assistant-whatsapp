@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { pageOrgContext } from "@/server/page-context";
 import { can } from "@/server/rbac/permissions";
 import { PageHeader, Card } from "@/components/ui";
@@ -13,7 +13,7 @@ import {
   type RecoRow,
 } from "@/components/automations/RecommendationsPanel";
 
-export const metadata = { title: "À surveiller — Djeli" };
+export const metadata = { title: "À surveiller — FEREDRON" };
 
 type SP = { [k: string]: string | string[] | undefined };
 
@@ -61,7 +61,7 @@ export default async function RecommendationsPage({
     <>
       <PageHeader
         title="À surveiller aujourd'hui"
-        subtitle="Les points détectés par Djeli dans votre activité. Chaque recommandation propose une action à préparer — jamais exécutée sans vous."
+        subtitle="Les points détectés par FEREDRON dans votre activité. Chaque recommandation propose une action à préparer — jamais exécutée sans vous."
       />
 
       {daily && !showDismissed ? (

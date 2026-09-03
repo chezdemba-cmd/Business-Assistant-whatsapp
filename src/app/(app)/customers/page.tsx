@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { CustomerType, Prisma } from "@prisma/client";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -12,7 +12,7 @@ import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { Pager } from "@/components/Pager";
 import { CustomersFilters } from "@/components/customers/CustomersFilters";
 
-export const metadata = { title: "Clients — Djeli" };
+export const metadata = { title: "Clients — FEREDRON" };
 
 const PER_PAGE = 20;
 const CUSTOMER_TYPE_VALUES = Object.keys(CUSTOMER_TYPE_LABEL);
@@ -128,8 +128,8 @@ export default async function CustomersPage({
       ) : (
         <>
           <Card style={{ padding: 0, overflow: "hidden" }}>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+            <div className="customers-desktop-table" style={{ overflowX: "auto" }}>
+              <table className="dj-cards-sm" style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
                 <thead>
                   <tr style={{ background: "var(--panel)" }}>
                     {["Client", "Boutique", "Type", "Zone", "Cmd.", "Total achats", "Dernière"].map(
@@ -157,7 +157,7 @@ export default async function CustomersPage({
                     const s = stats.get(c.id);
                     return (
                       <tr key={c.id} style={{ borderTop: "1px solid var(--border-soft)" }}>
-                        <td style={{ padding: "14px 16px" }}>
+                        <td data-label="Client" style={{ padding: "14px 16px" }}>
                           <Link href={`/customers/${c.id}`} style={{ fontWeight: 700 }}>
                             {c.displayName}
                           </Link>
@@ -166,29 +166,30 @@ export default async function CustomersPage({
                             {c.status === "ARCHIVED" ? " · archivé" : ""}
                           </div>
                         </td>
-                        <td style={{ padding: "14px 16px", color: "var(--text-2)" }}>
+                        <td data-label="Boutique" style={{ padding: "14px 16px", color: "var(--text-2)" }}>
                           {c.businessName ?? "—"}
                         </td>
-                        <td style={{ padding: "14px 16px" }}>
+                        <td data-label="Type" style={{ padding: "14px 16px" }}>
                           {c.customerType ? (
                             <Badge>{CUSTOMER_TYPE_LABEL[c.customerType]}</Badge>
                           ) : (
                             "—"
                           )}
                         </td>
-                        <td style={{ padding: "14px 16px", color: "var(--text-2)" }}>
+                        <td data-label="Zone" style={{ padding: "14px 16px", color: "var(--text-2)" }}>
                           {c.area ?? "—"}
                         </td>
-                        <td className="tnum" style={{ padding: "14px 16px", textAlign: "right" }}>
+                        <td data-label="Cmd." className="tnum" style={{ padding: "14px 16px", textAlign: "right" }}>
                           {s?.orderCount ?? 0}
                         </td>
                         <td
+                          data-label="Total achats"
                           className="tnum"
                           style={{ padding: "14px 16px", textAlign: "right", fontWeight: 700 }}
                         >
                           {formatAmount(s?.totalSpent ?? 0, ctx.organization.currency)}
                         </td>
-                        <td style={{ padding: "14px 16px", color: "var(--text-3)", fontSize: 13 }}>
+                        <td data-label="Dernière" style={{ padding: "14px 16px", color: "var(--text-3)", fontSize: 13 }}>
                           {s?.lastOrderAt ? formatDate(s.lastOrderAt) : "—"}
                         </td>
                       </tr>
@@ -196,6 +197,31 @@ export default async function CustomersPage({
                   })}
                 </tbody>
               </table>
+            </div>
+            <div className="customers-mobile-list">
+              {customers.map((customer) => {
+                const customerStats = stats.get(customer.id);
+                return (
+                  <Link key={customer.id} href={`/customers/${customer.id}`} className="customer-mobile-card">
+                    <div className="customer-mobile-heading">
+                      <div>
+                        <strong>{customer.displayName}</strong>
+                        <span>{customer.phone ?? "Téléphone non renseigné"}</span>
+                      </div>
+                      <span aria-hidden>›</span>
+                    </div>
+                    <div className="customer-mobile-tags">
+                      {customer.customerType ? <Badge>{CUSTOMER_TYPE_LABEL[customer.customerType]}</Badge> : null}
+                      {customer.businessName ? <span>{customer.businessName}</span> : null}
+                      {customer.area ? <span>{customer.area}</span> : null}
+                    </div>
+                    <div className="customer-mobile-stats">
+                      <span><strong>{customerStats?.orderCount ?? 0}</strong> commande(s)</span>
+                      <span><strong>{formatAmount(customerStats?.totalSpent ?? 0, ctx.organization.currency)}</strong> achats</span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </Card>
           <Pager

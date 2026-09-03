@@ -1,4 +1,4 @@
-import { pageOrgContext } from "@/server/page-context";
+﻿import { pageOrgContext } from "@/server/page-context";
 import { PageHeader } from "@/components/ui";
 import { listNotifications } from "@/server/notifications/notification-service";
 import {
@@ -6,7 +6,7 @@ import {
   type NotifRow,
 } from "@/components/notifications/NotificationsList";
 
-export const metadata = { title: "Notifications — Djeli" };
+export const metadata = { title: "Notifications — FEREDRON" };
 
 export default async function NotificationsPage() {
   const ctx = await pageOrgContext();

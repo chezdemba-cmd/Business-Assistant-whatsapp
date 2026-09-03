@@ -1,9 +1,9 @@
-import { prisma } from "@/server/db/client";
+﻿import { prisma } from "@/server/db/client";
 import { getCurrentUser } from "@/server/auth/current-user";
 import { roleLabel, Card } from "@/components/ui";
 import { AcceptInviteForm } from "./AcceptInviteForm";
 
-export const metadata = { title: "Invitation — Djeli" };
+export const metadata = { title: "Invitation — FEREDRON" };
 
 export default async function InvitePage({
   params,

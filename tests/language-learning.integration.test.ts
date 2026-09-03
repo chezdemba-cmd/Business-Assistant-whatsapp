@@ -58,8 +58,11 @@ import { test } from "node:test";
 
 const RUN = process.env.RUN_DB_TESTS === "1" || process.env.RUN_DB_TESTS === "true";
 
-test("intégration Djeli Learning Loop (nécessite RUN_DB_TESTS + DB)", { skip: !RUN }, () => {
-  throw new Error(
-    "Brancher ici recomputeLearningCandidates / approveCandidate / promoteLearningCandidate / buildLearningDataset sur une base de test.",
-  );
-});
+test(
+  "intégration Djeli Learning Loop (nécessite RUN_DB_TESTS + DB)",
+  {
+    skip: !RUN,
+    todo: "À implémenter : recomputeLearningCandidates / approveCandidate / promoteLearningCandidate / buildLearningDataset sur une base de test.",
+  },
+  () => {},
+);

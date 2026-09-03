@@ -1,8 +1,8 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth/current-user";
 import { LoginForm } from "./LoginForm";
 
-export const metadata = { title: "Connexion — Djeli" };
+export const metadata = { title: "Connexion — FEREDRON" };
 
 export default async function LoginPage({
   searchParams,

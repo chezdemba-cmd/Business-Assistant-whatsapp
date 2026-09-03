@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,7 @@ const SUGGESTIONS = [
   "Quels stocks sont faibles ?",
   "Quels clients sont inactifs ?",
   "Quelles commandes traînent ?",
+  "J'ai encore 20 ensembles Bazin. Je veux les vendre cette semaine.",
 ];
 
 type Turn = { question: string; answer?: AssistantAnswer; error?: string };
@@ -40,6 +41,7 @@ export function Assistant({
   const [state, formAction, isPending] = useActionState(askAssistantAction, null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const latestTurnRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!state) return;
@@ -53,6 +55,12 @@ export function Assistant({
       return next;
     });
   }, [state]);
+
+  useEffect(() => {
+    if (turns.length > 0) {
+      latestTurnRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [turns]);
 
   function submit(question: string) {
     pendingQ.current = question;
@@ -72,7 +80,7 @@ export function Assistant({
             {proactive.headline}
           </div>
           {proactive.items.length ? (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <div className="assistant-opportunities" style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {proactive.items.map((it) => (
                 <a key={it.label} href={it.href} className="dj-badge" style={{ fontWeight: 600, color: "var(--text-2)" }}>
                   {it.label}
@@ -83,7 +91,7 @@ export function Assistant({
         </Card>
       ) : null}
       <Card>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+        <div className="assistant-suggestions" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
           {SUGGESTIONS.map((s) => (
             <button
               key={s}
@@ -98,6 +106,7 @@ export function Assistant({
           ))}
         </div>
         <form
+          className="assistant-composer"
           ref={formRef}
           action={(fd) => {
             const q = String(fd.get("question") ?? "").trim();
@@ -136,13 +145,14 @@ export function Assistant({
       {turns.length === 0 ? null : (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {[...turns].reverse().map((t, idx) => (
-            <Card key={turns.length - 1 - idx}>
+            <div key={turns.length - 1 - idx} ref={idx === 0 ? latestTurnRef : undefined}>
+            <Card>
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
                 {t.question}
               </div>
               {!t.answer && !t.error ? (
                 <div style={{ fontSize: 13, color: "var(--text-3)" }}>
-                  Djeli IA prépare une réponse…
+                  FEREDRON IA prépare une réponse…
                 </div>
               ) : null}
               {t.error ? (
@@ -197,6 +207,7 @@ export function Assistant({
                 </>
               ) : null}
             </Card>
+            </div>
           ))}
         </div>
       )}
@@ -237,7 +248,7 @@ function ProposalControls({
       <div style={{ fontSize: 13, fontWeight: 700 }}>
         Action proposée : {proposal.summary}
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
+      <div className="assistant-proposal-actions" style={{ display: "flex", gap: 8 }}>
         <form action={approveAction}>
           <input type="hidden" name="organizationId" value={organizationId} />
           <input type="hidden" name="proposalId" value={proposal.id} />

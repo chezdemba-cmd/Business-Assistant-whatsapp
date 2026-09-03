@@ -50,8 +50,11 @@ import { test } from "node:test";
 
 const RUN = process.env.RUN_DB_TESTS === "1" || process.env.RUN_DB_TESTS === "true";
 
-test("intégration WhatsApp/conversations (nécessite RUN_DB_TESTS + DB)", { skip: !RUN }, () => {
-  throw new Error(
-    "Brancher ici processWhatsAppWebhook / sendConversationMessage / applyStatusUpdate sur une base de test.",
-  );
-});
+test(
+  "intégration WhatsApp/conversations (nécessite RUN_DB_TESTS + DB)",
+  {
+    skip: !RUN,
+    todo: "À implémenter : processWhatsAppWebhook / sendConversationMessage / applyStatusUpdate sur une base de test.",
+  },
+  () => {},
+);

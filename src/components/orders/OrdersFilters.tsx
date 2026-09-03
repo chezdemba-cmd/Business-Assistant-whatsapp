@@ -26,6 +26,7 @@ export function OrdersFilters() {
 
   return (
     <form
+      className="orders-filters"
       onSubmit={(e) => e.preventDefault()}
       style={{
         display: "grid",
@@ -77,12 +78,15 @@ export function OrdersFilters() {
           </option>
         ))}
       </Select>
-      <Input
-        type="date"
-        defaultValue={params.get("from") ?? ""}
-        onChange={(e) => update({ from: e.currentTarget.value })}
-        aria-label="Depuis"
-      />
+      <label className="orders-date-filter">
+        <span>Depuis</span>
+        <Input
+          type="date"
+          defaultValue={params.get("from") ?? ""}
+          onChange={(e) => update({ from: e.currentTarget.value })}
+          aria-label="Depuis le"
+        />
+      </label>
     </form>
   );
 }

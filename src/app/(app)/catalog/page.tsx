@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -11,7 +11,7 @@ import { ProductCard } from "@/components/catalog/ProductCard";
 import { CatalogFilters } from "@/components/catalog/CatalogFilters";
 import { CategoryQuickAdd } from "@/components/catalog/CategoryQuickAdd";
 
-export const metadata = { title: "Catalogue — Djeli" };
+export const metadata = { title: "Catalogue — FEREDRON" };
 
 const PER_PAGE = 12;
 const CAP = 500;
@@ -92,10 +92,10 @@ export default async function CatalogPage({
         title="Catalogue"
         subtitle="Le stock affiché est calculé depuis les mouvements, jamais saisi directement."
         actions={
-          <>
+          <div className="catalog-actions">
             {can(ctx.role, "stock.write") ? (
               <Link className="dj-btn dj-btn--outline" href="/stock/new">
-                Mouvement de stock
+                Ajouter du stock
               </Link>
             ) : null}
             {canWrite ? (
@@ -103,29 +103,11 @@ export default async function CatalogPage({
                 Nouveau produit
               </Link>
             ) : null}
-          </>
+          </div>
         }
       />
 
       <CatalogFilters categories={categories} />
-
-      {canWrite ? (
-        <Card style={{ padding: 16, marginBottom: 20 }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.07em",
-              color: "var(--text-3)",
-              textTransform: "uppercase",
-              marginBottom: 10,
-            }}
-          >
-            Catégories ({categories.length})
-          </div>
-          <CategoryQuickAdd organizationId={orgId} />
-        </Card>
-      ) : null}
 
       {total === 0 ? (
         <EmptyState
@@ -182,6 +164,15 @@ export default async function CatalogPage({
           />
         </>
       )}
+
+      {canWrite ? (
+        <details className="catalog-category-manager">
+          <summary>Gérer les catégories ({categories.length})</summary>
+          <Card style={{ padding: 16 }}>
+            <CategoryQuickAdd organizationId={orgId} />
+          </Card>
+        </details>
+      ) : null}
     </>
   );
 }

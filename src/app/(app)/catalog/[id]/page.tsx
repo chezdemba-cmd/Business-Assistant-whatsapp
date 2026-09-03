@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
@@ -11,7 +11,7 @@ import { Card, PageHeader, StockStateBadge, ProductPhoto, Badge } from "@/compon
 import { ArchiveToggle } from "@/components/catalog/ProductActions";
 import { ReverseMovementButton } from "@/components/stock/ReverseMovementButton";
 
-export const metadata = { title: "Produit — Djeli" };
+export const metadata = { title: "Produit — FEREDRON" };
 
 export default async function ProductDetailPage({
   params,

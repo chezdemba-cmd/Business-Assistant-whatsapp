@@ -5,6 +5,9 @@ import { Conflict, Forbidden, NotFound } from "@/server/errors";
 import { writeAuditLog } from "@/server/audit/log";
 import { can } from "@/server/rbac/permissions";
 import { createReminderCampaign } from "@/server/finance/reminder-service";
+import { createCampaign } from "@/server/marketing/campaign-service";
+import { salesCampaignMessage } from "@/server/marketing/content";
+import { getStockSnapshots } from "@/server/stock/stock-service";
 import { approveOrderDraft } from "./order-draft-service";
 
 /**
@@ -43,6 +46,44 @@ export async function approveProposal(input: {
     });
     redirectTo = `/reminders/${res.campaignId}`;
     summary = `Campagne de relance préparée (${res.itemCount} ligne(s)).`;
+  } else if (proposal.type === "PREPARE_SALES_CAMPAIGN") {
+    if (!can(input.role, "marketing.manage")) {
+      throw Forbidden("Permission « marketing.manage » requise pour préparer une campagne.");
+    }
+    const productId = String(payload.productId ?? "");
+    if (!productId) throw Conflict("Proposition incomplète.");
+    const [product, organization] = await Promise.all([
+      prisma.product.findFirst({
+        where: { id: productId, organizationId: input.organizationId, status: "ACTIVE" },
+        select: { id: true, name: true, salePrice: true, alertThreshold: true, purchasePrice: true },
+      }),
+      prisma.organization.findUniqueOrThrow({
+        where: { id: input.organizationId },
+        select: { name: true, currency: true },
+      }),
+    ]);
+    if (!product) throw NotFound("Produit introuvable dans cette entreprise.");
+    const snapshots = await getStockSnapshots(input.organizationId, [product]);
+    const available = Math.max(0, snapshots.get(product.id)?.available ?? 0);
+    if (available === 0) throw Conflict("Ce produit n'a plus de stock disponible.");
+    const campaign = await createCampaign({
+      organizationId: input.organizationId,
+      actorUserId: input.actorUserId,
+      name: `Vente — ${product.name}`,
+      type: "PROMOTION",
+      audienceType: "PRODUCT_BUYERS",
+      audienceConfig: { productId: product.id },
+      message: salesCampaignMessage({
+        organizationName: organization.name,
+        productName: product.name,
+        unitPrice: Number(product.salePrice),
+        currency: organization.currency,
+        available,
+      }),
+      channel: "WHATSAPP",
+    });
+    redirectTo = `/marketing/${campaign.id}`;
+    summary = `Brouillon de campagne préparé pour ${product.name}. Aucun message envoyé.`;
   } else if (proposal.type === "CREATE_ORDER_FROM_DRAFT") {
     if (!can(input.role, "orders.write")) {
       throw Forbidden("Permission « orders.write » requise pour créer une commande.");

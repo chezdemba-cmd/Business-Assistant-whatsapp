@@ -1,12 +1,12 @@
-import { LegalShell } from "../legal/LegalShell";
+﻿import { LegalShell } from "../legal/LegalShell";
 
-export const metadata = { title: "Traitement des données — Djeli" };
+export const metadata = { title: "Traitement des données — FEREDRON" };
 
 export default function DataProcessingPage() {
   return (
     <LegalShell title="Politique de traitement des données">
       <p>
-        Ce document décrit, en termes opérationnels, comment Djeli traite les
+        Ce document décrit, en termes opérationnels, comment FEREDRON traite les
         données pour le compte de l&apos;organisation cliente (le responsable de
         traitement). Il tiendra lieu d&apos;annexe « traitement des données » une
         fois revu juridiquement.
@@ -14,7 +14,7 @@ export default function DataProcessingPage() {
       <h2>Rôles</h2>
       <ul>
         <li>Client : responsable de traitement pour ses données métier et ses clients finaux.</li>
-        <li>Djeli : sous-traitant, agit sur instruction du client.</li>
+        <li>FEREDRON : sous-traitant, agit sur instruction du client.</li>
       </ul>
       <h2>Catégories de données</h2>
       <p>

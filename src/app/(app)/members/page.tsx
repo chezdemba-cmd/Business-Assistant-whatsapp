@@ -1,4 +1,4 @@
-import type { Role } from "@prisma/client";
+﻿import type { Role } from "@prisma/client";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
 import { can, permissionsOf } from "@/server/rbac/permissions";
@@ -11,7 +11,7 @@ import {
 } from "@/components/members/InvitationsList";
 import { InviteMemberForm } from "@/components/InviteMemberForm";
 
-export const metadata = { title: "Membres & rôles — Djeli" };
+export const metadata = { title: "Membres & rôles — FEREDRON" };
 
 const ROLE_ORDER: Record<Role, number> = {
   OWNER: 0,

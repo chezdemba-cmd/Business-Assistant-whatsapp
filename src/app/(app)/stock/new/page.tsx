@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
 import { can } from "@/server/rbac/permissions";
@@ -6,7 +6,7 @@ import { PageHeader, Card, EmptyState } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { StockMovementForm } from "@/components/stock/StockMovementForm";
 
-export const metadata = { title: "Mouvement de stock — Djeli" };
+export const metadata = { title: "Mouvement de stock — FEREDRON" };
 
 export default async function NewMovementPage({
   searchParams,

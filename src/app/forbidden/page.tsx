@@ -1,6 +1,6 @@
-import { ForbiddenPanel } from "@/components/ForbiddenPanel";
+﻿import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 
-export const metadata = { title: "Accès non autorisé — Djeli" };
+export const metadata = { title: "Accès non autorisé — FEREDRON" };
 
 export default function ForbiddenPage() {
   return (

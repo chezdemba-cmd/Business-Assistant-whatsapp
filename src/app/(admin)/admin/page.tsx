@@ -1,7 +1,7 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { listOrganizations, platformMetrics } from "@/server/admin/console-service";
 
-export const metadata = { title: "Organisations — Console Djeli" };
+export const metadata = { title: "Organisations — Console FEREDRON" };
 
 export default async function AdminOrgsPage() {
   const [orgs, metrics] = await Promise.all([listOrganizations(200), platformMetrics()]);

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useActionState } from "react";
 import {
@@ -11,8 +11,8 @@ const TYPES = [
   ["QUESTION", "Question"],
   ["BUG", "Bug / problème"],
   ["WHATSAPP", "WhatsApp"],
-  ["AI", "Djeli IA"],
-  ["VOICE", "Djeli Voice"],
+  ["AI", "FEREDRON IA"],
+  ["VOICE", "FEREDRON Voice"],
   ["BILLING", "Offre / facturation"],
   ["OTHER", "Autre"],
 ] as const;

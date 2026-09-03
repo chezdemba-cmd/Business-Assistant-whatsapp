@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { pageOrgContext } from "@/server/page-context";
 import { prisma } from "@/server/db/client";
 import { can } from "@/server/rbac/permissions";
@@ -7,7 +7,7 @@ import { PageHeader, EmptyState } from "@/components/ui";
 import { ForbiddenPanel } from "@/components/ForbiddenPanel";
 import { NewOrderForm } from "@/components/orders/NewOrderForm";
 
-export const metadata = { title: "Nouvelle commande — Djeli" };
+export const metadata = { title: "Nouvelle commande — FEREDRON" };
 
 export default async function NewOrderPage() {
   const ctx = await pageOrgContext();

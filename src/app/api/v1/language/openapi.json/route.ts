@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-/** Schéma OpenAPI minimal de la Djeli Language API v1. */
+/** Schéma OpenAPI minimal de la FEREDRON Language API v1. */
 const SPEC = {
   openapi: "3.0.3",
   info: {
-    title: "Djeli Language API",
+    title: "FEREDRON Language API",
     version: "1.0.0",
     description:
       "Brique linguistique réutilisable (BM / FR / MIXED). Auth : Bearer <clientId>.<secret>.",
