@@ -7,10 +7,10 @@ export const metadata = { title: "Connexion — FEREDRON" };
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; reset?: string }>;
 }) {
   const user = await getCurrentUser();
   if (user) redirect("/dashboard");
-  const { next } = await searchParams;
-  return <LoginForm next={next} />;
+  const { next, reset } = await searchParams;
+  return <LoginForm next={next} justReset={reset === "1"} />;
 }

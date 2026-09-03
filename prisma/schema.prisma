@@ -409,8 +409,28 @@ model User {
   supportTicketsOpened     SupportTicket[]               @relation("SupportTicketOpener")
   feedbackSubmitted        Feedback[]                    @relation("FeedbackAuthor")
   deletionRequests         OrganizationDeletionRequest[] @relation("OrgDeletionRequester")
+  passwordResetTokens      PasswordResetToken[]
 
   @@map("users")
+}
+
+/// Jeton de réinitialisation de mot de passe (§R2). Le jeton en clair n'est
+/// JAMAIS stocké : seul son SHA-256 l'est. À usage unique, expiration courte.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 hex du jeton envoyé par e-mail.
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  /// IP de la demande (best-effort, traçabilité).
+  requestIp String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
 }
 
 /// Une organisation = une entreprise cliente. Cœur du multi-tenant.

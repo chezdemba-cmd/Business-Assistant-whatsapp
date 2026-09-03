@@ -16,6 +16,9 @@ function env(over: Record<string, unknown> = {}) {
     RATE_LIMIT_STORE: "memory",
     REDIS_URL: undefined,
     ALLOW_DEMO_SEED: "0",
+    EMAIL_PROVIDER: "resend",
+    EMAIL_API_KEY: "re_xxx",
+    EMAIL_ALLOW_MOCK_IN_PROD: "0",
     ...over,
   } as never;
 }
@@ -58,6 +61,24 @@ test("DEPLOYMENT_TOPOLOGY=multi + rate-limit mémoire → bloqué", () => {
   // multi + redis : ce garde-fou-ci ne se déclenche pas (l'autre, sur l'adaptateur, oui).
   const issues = productionGuardIssues(env({ DEPLOYMENT_TOPOLOGY: "multi", RATE_LIMIT_STORE: "redis" }));
   assert.doesNotMatch(issues.join(" "), /exige un rate-limit partagé/i);
+});
+
+test("EMAIL_PROVIDER=mock en prod sans autorisation → bloqué", () => {
+  assert.match(
+    productionGuardIssues(env({ EMAIL_PROVIDER: "mock" }))[0]!,
+    /EMAIL_PROVIDER=mock/,
+  );
+  assert.deepEqual(
+    productionGuardIssues(env({ EMAIL_PROVIDER: "mock", EMAIL_ALLOW_MOCK_IN_PROD: "1" })),
+    [],
+  );
+});
+
+test("EMAIL_PROVIDER=resend sans EMAIL_API_KEY → bloqué", () => {
+  assert.match(
+    productionGuardIssues(env({ EMAIL_API_KEY: undefined }))[0]!,
+    /EMAIL_API_KEY/,
+  );
 });
 
 test("hors production : aucun garde-fou", () => {

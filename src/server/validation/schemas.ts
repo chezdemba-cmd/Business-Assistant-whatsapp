@@ -69,6 +69,21 @@ export const changePasswordSchema = z
     message: "Les mots de passe ne correspondent pas",
   });
 
+export const requestPasswordResetSchema = z.object({
+  email: emailField,
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().trim().min(10, "Lien invalide"),
+    newPassword: passwordField,
+    confirmPassword: z.string(),
+  })
+  .refine((v) => v.newPassword === v.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Les mots de passe ne correspondent pas",
+  });
+
 export const updateProfileSchema = z.object({
   firstName: nameField,
   lastName: nameField,

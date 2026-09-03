@@ -9,13 +9,19 @@ import { writeAuditLog } from "@/server/audit/log";
 import { AppError, Conflict, RateLimited } from "@/server/errors";
 import { getEnv } from "@/lib/env";
 import { consumeRateLimit } from "@/server/ratelimit/store";
-import { registerSchema, loginSchema } from "@/server/validation/schemas";
+import {
+  registerSchema,
+  loginSchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema,
+} from "@/server/validation/schemas";
 import {
   isAccountLocked,
   registerFailedAttempt,
   clearedAttemptState,
   needsClearing,
 } from "@/server/auth/lockout";
+import { requestPasswordReset, resetPassword } from "@/server/auth/password-reset";
 import { normalizePhone } from "@/lib/identifiers";
 import { runAction, formToObject } from "./runner";
 import type { ActionResult } from "@/lib/result";
@@ -175,6 +181,42 @@ export async function loginAction(
     });
 
     return { redirectTo: membershipCount > 0 ? "/dashboard" : "/onboarding" };
+  });
+}
+
+/**
+ * Demande de réinitialisation. Réponse TOUJOURS identique (anti-énumération) :
+ * l'utilisateur ne sait pas si l'e-mail correspond à un compte.
+ */
+export async function requestPasswordResetAction(
+  _prev: FormState<{ sent: true }>,
+  formData: FormData,
+): Promise<ActionResult<{ sent: true }>> {
+  return runAction(async () => {
+    const ip = await callerIp();
+    const rl = await consumeRateLimit(
+      `pwreset:${ip}`,
+      getEnv().PASSWORD_RESET_RATE_LIMIT_PER_MIN,
+      60_000,
+    );
+    if (!rl.allowed) {
+      throw RateLimited("Trop de demandes. Réessayez dans une minute.");
+    }
+    const input = requestPasswordResetSchema.parse(formToObject(formData));
+    await requestPasswordReset({ email: input.email, requestIp: ip });
+    return { sent: true as const };
+  });
+}
+
+/** Applique un nouveau mot de passe à partir d'un jeton reçu par e-mail. */
+export async function resetPasswordAction(
+  _prev: FormState<Redirect>,
+  formData: FormData,
+): Promise<ActionResult<Redirect>> {
+  return runAction(async () => {
+    const input = resetPasswordSchema.parse(formToObject(formData));
+    await resetPassword({ token: input.token, newPassword: input.newPassword });
+    return { redirectTo: "/login?reset=1" };
   });
 }
 

@@ -100,6 +100,20 @@ const schema = z.object({
   /** Plafond d'items envoyés par campagne (garde-fou anti-spam, §24). 0 = pas de plafond. */
   MARKETING_MAX_RECIPIENTS: z.coerce.number().int().nonnegative().max(100_000).default(0),
 
+  // ── E-mail transactionnel (réinitialisation de mot de passe, §R2) ──
+  /** "mock" (dev/test : journalise, n'envoie rien) ou "resend" (API REST). */
+  EMAIL_PROVIDER: z.enum(["mock", "resend"]).default("mock"),
+  /** Clé API du provider e-mail. Jamais exposée au frontend ni journalisée. */
+  EMAIL_API_KEY: z.string().min(1).optional(),
+  /** Expéditeur des e-mails transactionnels (ex : "FEREDRON <no-reply@feredron.app>"). */
+  EMAIL_FROM: z.string().min(3).default("FEREDRON <no-reply@feredron.app>"),
+  /** Autorise explicitement EMAIL_PROVIDER=mock en production (déconseillé). */
+  EMAIL_ALLOW_MOCK_IN_PROD: z.enum(["0", "1"]).default("0"),
+  /** Durée de validité d'un lien de réinitialisation de mot de passe (minutes). */
+  PASSWORD_RESET_TTL_MIN: z.coerce.number().int().positive().max(1440).default(60),
+  /** Demandes de réinitialisation autorisées par IP et par minute. */
+  PASSWORD_RESET_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().max(60).default(5),
+
   // ── Phase 8 : production, monétisation, pilote ──
   /** Autorise explicitement AI_PROVIDER=mock en production (déconseillé). */
   AI_ALLOW_MOCK_IN_PROD: z.enum(["0", "1"]).default("0"),
@@ -215,6 +229,15 @@ export function productionGuardIssues(env: Env): string[] {
       "DEPLOYMENT_TOPOLOGY=multi exige un rate-limit partagé (RATE_LIMIT_STORE=redis) : " +
         "le store mémoire ne protège qu'une instance à la fois.",
     );
+  }
+  if (env.EMAIL_PROVIDER === "mock" && env.EMAIL_ALLOW_MOCK_IN_PROD !== "1") {
+    issues.push(
+      "EMAIL_PROVIDER=mock interdit en production (la réinitialisation de mot de passe " +
+        "n'enverrait rien) : configurer un vrai provider ou EMAIL_ALLOW_MOCK_IN_PROD=1.",
+    );
+  }
+  if (env.EMAIL_PROVIDER === "resend" && !env.EMAIL_API_KEY) {
+    issues.push("EMAIL_PROVIDER=resend exige EMAIL_API_KEY.");
   }
   return issues;
 }

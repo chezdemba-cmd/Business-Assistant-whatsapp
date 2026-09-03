@@ -6,7 +6,13 @@ import { loginAction } from "@/server/actions/auth.actions";
 import { SubmitButton, Feedback, fieldError } from "@/components/form";
 import { Field, Input } from "@/components/ui";
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({
+  next,
+  justReset = false,
+}: {
+  next?: string;
+  justReset?: boolean;
+}) {
   const router = useRouter();
   const [state, action] = useActionState(loginAction, null);
 
@@ -24,6 +30,23 @@ export function LoginForm({ next }: { next?: string }) {
           Accédez à l&apos;espace de votre entreprise.
         </p>
       </div>
+
+      {justReset ? (
+        <p
+          role="status"
+          style={{
+            margin: 0,
+            fontSize: 13,
+            color: "var(--text-2)",
+            background: "var(--panel)",
+            border: "1px solid var(--border-soft)",
+            borderRadius: 8,
+            padding: "10px 12px",
+          }}
+        >
+          Mot de passe réinitialisé. Connectez-vous avec le nouveau.
+        </p>
+      ) : null}
 
       <Feedback state={state} />
 
@@ -55,6 +78,12 @@ export function LoginForm({ next }: { next?: string }) {
       </Field>
 
       <SubmitButton>Continuer</SubmitButton>
+
+      <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0 }}>
+        <a href="/forgot-password" style={{ fontWeight: 600 }}>
+          Mot de passe oublié ?
+        </a>
+      </p>
 
       <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0 }}>
         Pas encore de compte ?{" "}
