@@ -107,6 +107,12 @@ const schema = z.object({
   VOICE_ALLOW_MOCK_IN_PROD: z.enum(["0", "1"]).default("0"),
   /** Autorise l'exécution du seed de démonstration hors développement. */
   ALLOW_DEMO_SEED: z.enum(["0", "1"]).default("0"),
+  /**
+   * Topologie de déploiement. `single` (défaut, décision pilote) : une seule
+   * instance applicative — le rate-limit mémoire + le verrou de compte suffisent.
+   * `multi` : plusieurs instances → un rate-limit partagé est OBLIGATOIRE.
+   */
+  DEPLOYMENT_TOPOLOGY: z.enum(["single", "multi"]).default("single"),
   /** Backend du rate-limit : "memory" (mono-instance) ou "redis" (partagé). */
   RATE_LIMIT_STORE: z.enum(["memory", "redis"]).default("memory"),
   /** URL Redis (rate-limit partagé / file de production). ex : redis://host:6379 */
@@ -203,6 +209,12 @@ export function productionGuardIssues(env: Env): string[] {
   }
   if (env.ALLOW_DEMO_SEED === "1") {
     issues.push("ALLOW_DEMO_SEED=1 en production : le seed de démonstration ne doit jamais tourner en prod.");
+  }
+  if (env.DEPLOYMENT_TOPOLOGY === "multi" && env.RATE_LIMIT_STORE !== "redis") {
+    issues.push(
+      "DEPLOYMENT_TOPOLOGY=multi exige un rate-limit partagé (RATE_LIMIT_STORE=redis) : " +
+        "le store mémoire ne protège qu'une instance à la fois.",
+    );
   }
   return issues;
 }

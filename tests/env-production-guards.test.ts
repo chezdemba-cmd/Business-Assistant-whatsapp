@@ -12,6 +12,7 @@ function env(over: Record<string, unknown> = {}) {
     VOICE_PROVIDER: "openai-compatible",
     VOICE_ALLOW_MOCK_IN_PROD: "0",
     WHATSAPP_PROVIDER: "meta",
+    DEPLOYMENT_TOPOLOGY: "single",
     RATE_LIMIT_STORE: "memory",
     REDIS_URL: undefined,
     ALLOW_DEMO_SEED: "0",
@@ -47,6 +48,16 @@ test("RATE_LIMIT_STORE=redis en prod → bloqué (adaptateur non implémenté)",
     productionGuardIssues(env({ RATE_LIMIT_STORE: "redis", REDIS_URL: "redis://x:6379" })).length,
     1,
   );
+});
+
+test("DEPLOYMENT_TOPOLOGY=multi + rate-limit mémoire → bloqué", () => {
+  assert.match(
+    productionGuardIssues(env({ DEPLOYMENT_TOPOLOGY: "multi" }))[0]!,
+    /multi.*rate-limit partagé/i,
+  );
+  // multi + redis : ce garde-fou-ci ne se déclenche pas (l'autre, sur l'adaptateur, oui).
+  const issues = productionGuardIssues(env({ DEPLOYMENT_TOPOLOGY: "multi", RATE_LIMIT_STORE: "redis" }));
+  assert.doesNotMatch(issues.join(" "), /exige un rate-limit partagé/i);
 });
 
 test("hors production : aucun garde-fou", () => {

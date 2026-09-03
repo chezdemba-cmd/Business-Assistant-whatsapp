@@ -1,7 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Caprasimo, Figtree } from "next/font/google";
 import { BRAND } from "@/lib/brand";
+import { installErrorTracking } from "@/server/observability/error-tracking";
 import "./globals.css";
+
+// Suivi d'erreurs (Sentry si SENTRY_DSN) — au démarrage du process web, pour
+// toutes les zones (auth, onboarding, admin, app). Idempotent.
+installErrorTracking();
 
 const display = Caprasimo({
   weight: "400",
