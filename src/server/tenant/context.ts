@@ -9,6 +9,7 @@ import type {
   User,
 } from "@prisma/client";
 import { prisma } from "@/server/db/client";
+import { getEnv } from "@/lib/env";
 import { Forbidden, OrganizationUnavailable } from "@/server/errors";
 import { evaluateOrganizationAccess } from "./access-policy";
 
@@ -65,7 +66,7 @@ export async function setActiveOrganization(organizationId: string): Promise<voi
   store.set(ACTIVE_ORG_COOKIE, organizationId, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: getEnv().APP_ENV !== "development",
     path: "/",
   });
 }

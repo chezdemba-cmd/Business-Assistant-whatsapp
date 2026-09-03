@@ -24,7 +24,9 @@ export async function createSession(userId: string): Promise<void> {
   store.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: getEnv().NODE_ENV === "production",
+    // Secure hors développement — couvre staging ET production (le cookie ne
+    // part jamais en clair sur un déploiement, quel que soit le NODE_ENV).
+    secure: getEnv().APP_ENV !== "development",
     path: "/",
     maxAge: ttlSeconds(),
   });

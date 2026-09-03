@@ -89,7 +89,7 @@ export function PasswordForm() {
             type="password"
             required
             autoComplete="new-password"
-            placeholder="8 caractères min."
+            placeholder="10 caractères min."
           />
         </Field>
         <Field

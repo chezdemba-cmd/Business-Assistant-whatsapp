@@ -37,7 +37,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           name="newPassword"
           type="password"
           autoComplete="new-password"
-          placeholder="8 caractères min."
+          placeholder="10 caractères min."
           required
           invalid={Boolean(fieldError(state, "newPassword"))}
         />

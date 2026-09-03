@@ -4,6 +4,7 @@ import {
   type AssignableRole,
 } from "@/server/tenant/ownership-rules";
 import { isValidPhone } from "@/lib/identifiers";
+import { passwordIssue, MAX_PASSWORD_LENGTH } from "@/server/auth/password-policy";
 
 /** Enums métier alignés sur Prisma (dupliqués ici pour valider les entrées client). */
 export const roleEnum = z.enum(["OWNER", "ADMIN", "MANAGER", "SALES", "EMPLOYEE"]);
@@ -24,8 +25,11 @@ const phoneField = z
   .max(24, "Numéro trop long");
 const passwordField = z
   .string()
-  .min(8, "8 caractères minimum")
-  .max(200, "Mot de passe trop long");
+  .max(MAX_PASSWORD_LENGTH, "Mot de passe trop long")
+  .superRefine((v, ctx) => {
+    const issue = passwordIssue(v);
+    if (issue) ctx.addIssue({ code: z.ZodIssueCode.custom, message: issue });
+  });
 
 // ── Auth ──────────────────────────────────────────────────────────────
 
