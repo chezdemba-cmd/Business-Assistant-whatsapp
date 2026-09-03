@@ -28,10 +28,23 @@ function guardEnv(): void {
     console.error("✗ Seed DÉMO refusé : APP_ENV/NODE_ENV = production.");
     process.exit(1);
   }
+  // Hors développement pur (ex. staging accessible) : mots de passe démo
+  // EXPLICITES obligatoires — jamais le fallback connu.
+  if (appEnv !== "development") {
+    const missing = PEOPLE.filter((p) => !process.env[p.envPw]).map((p) => p.envPw);
+    if (missing.length > 0) {
+      console.error(
+        `✗ Seed DÉMO refusé (APP_ENV=${appEnv}) : définir explicitement ${missing.join(", ")}.`,
+      );
+      process.exit(1);
+    }
+  }
 }
 
 const PEOPLE = [
-  { key: "owner", firstName: "Salif", lastName: "Konaté", email: "owner@demo.djeli.test", phone: "+22390000001", role: "OWNER" as const, envPw: "DEMO_OWNER_PASSWORD", superAdmin: true },
+  // Aucun compte DÉMO n'est opérateur plateforme : l'accès à /admin passe par
+  // l'allowlist DJELI_SUPERADMIN_EMAILS, jamais par le seed.
+  { key: "owner", firstName: "Salif", lastName: "Konaté", email: "owner@demo.djeli.test", phone: "+22390000001", role: "OWNER" as const, envPw: "DEMO_OWNER_PASSWORD", superAdmin: false },
   { key: "admin", firstName: "Nana", lastName: "Diarra", email: "admin@demo.djeli.test", phone: "+22390000002", role: "ADMIN" as const, envPw: "DEMO_ADMIN_PASSWORD", superAdmin: false },
   { key: "manager", firstName: "Bakary", lastName: "Sangaré", email: "manager@demo.djeli.test", phone: "+22390000003", role: "MANAGER" as const, envPw: "DEMO_MANAGER_PASSWORD", superAdmin: false },
   { key: "sales", firstName: "Awa", lastName: "Touré", email: "sales@demo.djeli.test", phone: "+22390000004", role: "SALES" as const, envPw: "DEMO_SALES_PASSWORD", superAdmin: false },
