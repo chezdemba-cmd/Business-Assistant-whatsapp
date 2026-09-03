@@ -10,6 +10,12 @@ import { AppError, Conflict, RateLimited } from "@/server/errors";
 import { getEnv } from "@/lib/env";
 import { consumeRateLimit } from "@/server/ratelimit/store";
 import { registerSchema, loginSchema } from "@/server/validation/schemas";
+import {
+  isAccountLocked,
+  registerFailedAttempt,
+  clearedAttemptState,
+  needsClearing,
+} from "@/server/auth/lockout";
 import { normalizePhone } from "@/lib/identifiers";
 import { runAction, formToObject } from "./runner";
 import type { ActionResult } from "@/lib/result";
@@ -97,10 +103,42 @@ export async function loginAction(
       where: { email: input.email },
     });
 
+    // Verrouillage PAR COMPTE (anti-brute-force, complète le rate-limit par IP).
+    if (user && isAccountLocked(user)) {
+      await writeAuditLog({
+        action: "LOGIN_BLOCKED_LOCKED",
+        entityType: "user",
+        entityId: user.id,
+        metadata: { email: input.email },
+      });
+      throw new AppError(
+        "RATE_LIMITED",
+        "Compte temporairement bloqué après trop de tentatives. Réessayez plus tard.",
+      );
+    }
+
     const passwordOk =
       user && (await verifyPassword(input.password, user.passwordHash));
 
     if (!user || !passwordOk) {
+      if (user) {
+        const next = registerFailedAttempt(user);
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            failedLoginCount: next.failedLoginCount,
+            lockedUntil: next.lockedUntil,
+          },
+        });
+        if (next.justLocked) {
+          await writeAuditLog({
+            action: "LOGIN_LOCKED",
+            entityType: "user",
+            entityId: user.id,
+            metadata: { email: input.email },
+          });
+        }
+      }
       await writeAuditLog({
         action: "LOGIN_FAILED",
         entityType: "user",
@@ -119,7 +157,11 @@ export async function loginAction(
     await createSession(user.id);
     await prisma.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() },
+      data: {
+        lastLoginAt: new Date(),
+        // Réinitialise le compteur d'échecs / le verrou au succès.
+        ...(needsClearing(user) ? clearedAttemptState() : {}),
+      },
     });
     await writeAuditLog({
       action: "LOGIN_SUCCESS",

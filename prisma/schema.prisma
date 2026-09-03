@@ -369,6 +369,11 @@ model User {
   /// rejetée. Positionné par « déconnecter tous les appareils », par une
   /// suspension de compte, ou par l'admin Djeli en cas d'appareil compromis.
   sessionInvalidBefore DateTime?
+  /// Échecs de connexion consécutifs depuis le dernier succès (anti-brute-force
+  /// PAR COMPTE — complète le rate-limit par IP, cf. server/auth/lockout.ts).
+  failedLoginCount     Int        @default(0)
+  /// Compte verrouillé jusqu'à cet instant après trop d'échecs. Null = non verrouillé.
+  lockedUntil          DateTime?
   /// Opérateur de la plateforme Djeli (console /admin). N'est PAS un rôle
   /// d'organisation et ne donne aucun accès au contenu privé des tenants.
   isSuperAdmin         Boolean    @default(false)

@@ -7,6 +7,8 @@ export type AuditAction =
   | "USER_REGISTERED"
   | "LOGIN_SUCCESS"
   | "LOGIN_FAILED"
+  | "LOGIN_LOCKED"
+  | "LOGIN_BLOCKED_LOCKED"
   | "LOGOUT"
   | "PASSWORD_CHANGED"
   | "PROFILE_UPDATED"
